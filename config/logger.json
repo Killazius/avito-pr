@@ -1,0 +1,15 @@
+{
+  "level": "debug",
+  "encoding": "json",
+  "outputPaths": ["stdout"],
+  "errorOutputPaths": ["stderr"],
+  "encoderConfig": {
+    "timeKey": "timestamp",
+    "timeEncoder": "rfc3339",
+    "messageKey": "message",
+    "levelKey": "level",
+    "levelEncoder": "lowercase",
+    "callerKey": "caller",
+    "callerEncoder": "short"
+  }
+}

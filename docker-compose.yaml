@@ -1,0 +1,21 @@
+services:
+  app:
+    container_name: avito
+    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    image: app:latest
+    ports:
+      - "8080:8080"
+    environment:
+      CONFIG_PATH: ${CONFIG_PATH}
+
+
+
