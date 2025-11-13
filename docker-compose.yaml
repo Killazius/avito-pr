@@ -27,6 +27,7 @@ services:
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_SSL_MODE: ${POSTGRES_SSL_MODE}
+      GIN_MODE: ${GIN_MODE}
 
   postgres:
     container_name: avito-postgres
