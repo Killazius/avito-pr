@@ -11,8 +11,9 @@ import (
 )
 
 type Config struct {
-	Server HTTPConfig   `yaml:"server"`
-	Logger LoggerConfig `yaml:"logger"`
+	Server   HTTPConfig     `yaml:"server"`
+	Logger   LoggerConfig   `yaml:"logger"`
+	Postgres PostgresConfig `yaml:"postgres"`
 }
 
 type HTTPConfig struct {
@@ -28,6 +29,22 @@ type HTTPConfig struct {
 
 type LoggerConfig struct {
 	Path string `yaml:"path" env-default:"config/logger.json"`
+}
+
+type PostgresConfig struct {
+	Host     string `env:"POSTGRES_HOST" env-default:"localhost"`
+	Port     string `env:"POSTGRES_PORT" env-default:"5432"`
+	Username string `env:"POSTGRES_USER" env-default:"postgres"`
+	Password string `env:"POSTGRES_PASSWORD" env-default:"postgres"`
+	Database string `env:"POSTGRES_DB" env-default:"postgres"`
+	SSLMode  string `env:"POSTGRES_SSL_MODE" env-default:"disable"`
+
+	MaxOpenConns    int32         `yaml:"max_open_conns" env-default:"25"`
+	MaxIdleConns    int32         `yaml:"max_idle_conns" env-default:"5"`
+	ConnMaxLifetime time.Duration `yaml:"conn_max_lifetime" env-default:"1h"`
+	ConnMaxIdleTime time.Duration `yaml:"conn_max_idle_time" env-default:"30m"`
+	Timeout         time.Duration `yaml:"timeout" env-default:"5s"`
+	MigrationsPath  string        `yaml:"migrations_path" env-default:"./migrations"`
 }
 
 const (
