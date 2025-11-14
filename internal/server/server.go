@@ -13,6 +13,9 @@ import (
 	"go.uber.org/zap"
 )
 
+type Handler interface {
+	RegisterRoutes(r *gin.Engine)
+}
 type Server struct {
 	server *http.Server
 	cfg    config.HTTPConfig
@@ -23,8 +26,9 @@ type Server struct {
 func New(
 	log *zap.Logger,
 	cfg config.HTTPConfig,
+	handlers ...Handler,
 ) *Server {
-	router := registerRoutes(log)
+	router := registerRoutes(log, handlers...)
 	return &Server{
 		server: &http.Server{
 			Addr:         cfg.GetAddr(),
@@ -40,14 +44,15 @@ func New(
 
 }
 
-// register with handler
-func registerRoutes(log *zap.Logger) *gin.Engine {
+func registerRoutes(log *zap.Logger, handlers ...Handler) *gin.Engine {
 
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(ginzap.Ginzap(log, time.RFC3339, true))
 	r.Use(ginzap.RecoveryWithZap(log, true))
-
+	for _, handler := range handlers {
+		handler.RegisterRoutes(r)
+	}
 	return r
 }
 
