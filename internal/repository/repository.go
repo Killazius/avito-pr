@@ -6,20 +6,24 @@ import (
 	"strconv"
 
 	"github.com/Killazius/avito-pr/internal/config"
+	"github.com/Killazius/avito-pr/internal/repository/postgres"
+	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
+	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Repository struct {
-	DB *pgxpool.Pool
+func New(cfg config.PostgresConfig) (*postgres.Repository, *manager.Manager, error) {
+	pool, err := CreatePool(cfg)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create pool: %w", err)
+	}
+
+	trManager := manager.Must(trmpgx.NewDefaultFactory(pool))
+	repo := postgres.New(pool, trmpgx.DefaultCtxGetter)
+
+	return repo, trManager, nil
 }
 
-func New(db *pgxpool.Pool) *Repository {
-	return &Repository{DB: db}
-}
-
-func (r *Repository) Close() {
-	r.DB.Close()
-}
 func CreatePool(cfg config.PostgresConfig) (*pgxpool.Pool, error) {
 	poolConfig, err := pgxpool.ParseConfig("")
 	if err != nil {

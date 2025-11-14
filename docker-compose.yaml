@@ -11,10 +11,12 @@ services:
       context: .
       dockerfile: Dockerfile
       target: app
-    image: avito:latest
+    image: avito-app:1.0
     depends_on:
       postgres:
         condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
     ports:
       - "8080:8080"
     networks:
@@ -28,11 +30,32 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_SSL_MODE: ${POSTGRES_SSL_MODE}
       GIN_MODE: ${GIN_MODE}
-
+  migrator:
+    container_name: avito-migrator
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    image: avito-migrator:1.0
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_SSL_MODE: ${POSTGRES_SSL_MODE}
+      GOOSE_DRIVER: ${GOOSE_DRIVER}
+      GOOSE_MIGRATION_DIR: ${GOOSE_MIGRATION_DIR}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+    restart: "no"
   postgres:
     container_name: avito-postgres
     restart: always
-    image: postgres:latest
+    image: postgres:18.1
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -40,7 +63,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data/pgdata
     networks:
       - backend
     healthcheck:

@@ -4,27 +4,35 @@ import (
 	"github.com/Killazius/avito-pr/internal/config"
 	"github.com/Killazius/avito-pr/internal/repository"
 	"github.com/Killazius/avito-pr/internal/server"
-	"github.com/Killazius/avito-pr/internal/service"
+	"github.com/Killazius/avito-pr/internal/server/handler/team"
+	"github.com/Killazius/avito-pr/internal/server/handler/user"
+	teamservice "github.com/Killazius/avito-pr/internal/service/team"
+	userservice "github.com/Killazius/avito-pr/internal/service/user"
+
 	"go.uber.org/zap"
 )
 
+type Repository interface {
+	Close()
+}
 type App struct {
 	log  *zap.Logger
 	api  *server.Server
 	cfg  *config.Config
-	repo *repository.Repository
+	repo Repository
 }
 
 func New(log *zap.Logger, cfg *config.Config) *App {
-	pool, err := repository.CreatePool(cfg.Postgres)
+	repo, trManager, err := repository.New(cfg.Postgres)
 	if err != nil {
-		log.Panic("failed to create db pool", zap.Error(err))
+		log.Fatal("failed to create repository", zap.Error(err))
 	}
-	repo := repository.New(pool)
-	serv := service.New()
-	_ = serv
+	teamService := teamservice.NewService(repo, repo, trManager)
+	teamHandler := team.NewTeamHandler(teamService)
 
-	api := server.New(log, cfg.Server)
+	userService := userservice.NewService(repo, trManager)
+	userHandler := user.NewHandler(userService)
+	api := server.New(log, cfg.Server, teamHandler, userHandler)
 
 	return &App{
 		log:  log,
