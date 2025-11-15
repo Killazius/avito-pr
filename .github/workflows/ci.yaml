@@ -10,21 +10,19 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: 'stable'
           cache: false
 
-      - name: Download dependencies
+      - name: go mod tidy
         run: |
           go mod tidy
           go mod download
 
-      - name: Lint
-        uses: golangci/golangci-lint-action@v4
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
         with:
           version: latest
           args: --out-format=tab
