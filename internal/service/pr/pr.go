@@ -74,6 +74,9 @@ func (s *Service) CreatePR(ctx context.Context, prID string, prName string, auth
 		if user == nil {
 			return ErrUserNotFound
 		}
+		if user.IsActive == false {
+			return fmt.Errorf("author user is not active")
+		}
 		teamExists, err := s.teamRepo.TeamExists(ctx, user.TeamName)
 		if err != nil {
 			return fmt.Errorf("failed to check team existence: %w", err)

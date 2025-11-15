@@ -27,7 +27,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	usersGroup := r.Group("/users")
 	{
 		usersGroup.POST("/setIsActive", h.SetUserStatus)
-		usersGroup.GET("/getReviews", h.GetReviews)
+		usersGroup.GET("/getReview", h.GetReview)
 	}
 }
 
@@ -58,7 +58,7 @@ type GetReviewsRequest struct {
 	UserID string `form:"user_id" binding:"required"`
 }
 
-func (h *Handler) GetReviews(c *gin.Context) {
+func (h *Handler) GetReview(c *gin.Context) {
 	var req GetReviewsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid query parameters"})
