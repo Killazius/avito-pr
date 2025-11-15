@@ -5,12 +5,13 @@ import (
 	"github.com/Killazius/avito-pr/internal/repository"
 	"github.com/Killazius/avito-pr/internal/server"
 	"github.com/Killazius/avito-pr/internal/server/handler/pr"
+	"github.com/Killazius/avito-pr/internal/server/handler/stats"
 	"github.com/Killazius/avito-pr/internal/server/handler/team"
 	"github.com/Killazius/avito-pr/internal/server/handler/user"
 	prservice "github.com/Killazius/avito-pr/internal/service/pr"
+	statservice "github.com/Killazius/avito-pr/internal/service/stats"
 	teamservice "github.com/Killazius/avito-pr/internal/service/team"
 	userservice "github.com/Killazius/avito-pr/internal/service/user"
-
 	"go.uber.org/zap"
 )
 
@@ -37,7 +38,11 @@ func New(log *zap.Logger, cfg *config.Config) *App {
 
 	prService := prservice.NewService(repo, repo, repo, trManager)
 	prHandler := pr.NewHandler(prService)
-	api := server.New(log, cfg.Server, teamHandler, userHandler, prHandler)
+
+	statsService := statservice.NewService(repo, trManager)
+	statsHandler := stats.NewHandler(statsService)
+
+	api := server.New(log, cfg.Server, teamHandler, userHandler, prHandler, statsHandler)
 
 	return &App{
 		log:  log,
