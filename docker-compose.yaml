@@ -55,7 +55,7 @@ services:
   postgres:
     container_name: avito-postgres
     restart: always
-    image: postgres:18.1
+    image: postgres:17.6
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -63,7 +63,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data/pgdata
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - backend
     healthcheck:

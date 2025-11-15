@@ -19,7 +19,7 @@ type Handler struct {
 	s Service
 }
 
-func NewTeamHandler(s Service) *Handler {
+func NewHandler(s Service) *Handler {
 	return &Handler{s: s}
 }
 
@@ -46,7 +46,7 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 	team, err := h.s.CreateTeamWithMembers(c.Request.Context(), req.TeamName, req.Members)
 	if err != nil {
 		if errors.Is(err, teamservice.ErrTeamExists) {
-			c.JSON(http.StatusConflict, gin.H{"error": "team already exists"}) // avito style needed
+			c.JSON(http.StatusBadRequest, gin.H{"error": "team already exists"}) // avito style needed
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()}) // avito style needed
@@ -58,7 +58,7 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 }
 
 type GetTeamRequest struct {
-	TeamName string `json:"team_name" binding:"required"`
+	TeamName string `form:"team_name" binding:"required"`
 }
 
 func (h *Handler) GetTeam(c *gin.Context) {

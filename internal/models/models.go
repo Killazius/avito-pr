@@ -2,6 +2,32 @@ package models
 
 import "time"
 
+type PRStatus = string
+
+const (
+	PRStatusOpen   PRStatus = "OPEN"
+	PRStatusMerged PRStatus = "MERGED"
+)
+
+type ErrorCode string
+
+const (
+	ErrorTeamExists  ErrorCode = "TEAM_EXISTS"
+	ErrorPRExists    ErrorCode = "PR_EXISTS"
+	ErrorPRMerged    ErrorCode = "PR_MERGED"
+	ErrorNotAssigned ErrorCode = "NOT_ASSIGNED"
+	ErrorNoCandidate ErrorCode = "NO_CANDIDATE"
+	ErrorNotFound    ErrorCode = "NOT_FOUND"
+)
+
+type ErrorBody struct {
+	Code    ErrorCode `json:"code"`
+	Message string    `json:"message"`
+}
+
+type ErrorResponse struct {
+	Error ErrorBody `json:"error"`
+}
 type TeamMember struct {
 	UserID   string `json:"user_id"`
 	Username string `json:"username"`

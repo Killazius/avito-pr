@@ -46,6 +46,16 @@ func load(path string) (*zap.Logger, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to build logger from config %q: %w", path, err)
 	}
+	level := getLevel()
+	logger = logger.WithOptions(zap.IncreaseLevel(level))
 	zap.ReplaceGlobals(logger)
 	return logger, nil
+}
+
+func getLevel() zap.AtomicLevel {
+	mode := os.Getenv("GIN_MODE")
+	if mode == "release" {
+		return zap.NewAtomicLevelAt(zap.InfoLevel)
+	}
+	return zap.NewAtomicLevelAt(zap.DebugLevel)
 }

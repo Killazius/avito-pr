@@ -4,8 +4,10 @@ import (
 	"github.com/Killazius/avito-pr/internal/config"
 	"github.com/Killazius/avito-pr/internal/repository"
 	"github.com/Killazius/avito-pr/internal/server"
+	"github.com/Killazius/avito-pr/internal/server/handler/pr"
 	"github.com/Killazius/avito-pr/internal/server/handler/team"
 	"github.com/Killazius/avito-pr/internal/server/handler/user"
+	prservice "github.com/Killazius/avito-pr/internal/service/pr"
 	teamservice "github.com/Killazius/avito-pr/internal/service/team"
 	userservice "github.com/Killazius/avito-pr/internal/service/user"
 
@@ -28,11 +30,14 @@ func New(log *zap.Logger, cfg *config.Config) *App {
 		log.Fatal("failed to create repository", zap.Error(err))
 	}
 	teamService := teamservice.NewService(repo, repo, trManager)
-	teamHandler := team.NewTeamHandler(teamService)
+	teamHandler := team.NewHandler(teamService)
 
 	userService := userservice.NewService(repo, trManager)
 	userHandler := user.NewHandler(userService)
-	api := server.New(log, cfg.Server, teamHandler, userHandler)
+
+	prService := prservice.NewService(repo, repo, repo, trManager)
+	prHandler := pr.NewHandler(prService)
+	api := server.New(log, cfg.Server, teamHandler, userHandler, prHandler)
 
 	return &App{
 		log:  log,
