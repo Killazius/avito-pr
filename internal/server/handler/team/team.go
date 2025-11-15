@@ -40,16 +40,28 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 	var req CreateTeamRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}) // avito style needed
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: models.ErrorBody{
+				Code:    models.ErrorBadRequest,
+				Message: "Invalid request payload",
+			}})
 		return
 	}
 	team, err := h.s.CreateTeamWithMembers(c.Request.Context(), req.TeamName, req.Members)
 	if err != nil {
 		if errors.Is(err, teamservice.ErrTeamExists) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "team already exists"}) // avito style needed
+			c.JSON(http.StatusBadRequest, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorTeamExists,
+					Message: "team_name already exists",
+				}})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()}) // avito style needed
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: models.ErrorBody{
+				Code:    models.ErrorInternal,
+				Message: "Internal server error",
+			}})
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
@@ -64,19 +76,30 @@ type GetTeamRequest struct {
 func (h *Handler) GetTeam(c *gin.Context) {
 	var req GetTeamRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: models.ErrorBody{
+				Code:    models.ErrorBadRequest,
+				Message: "Invalid request payload",
+			}})
 		return
 	}
 	team, err := h.s.GetTeam(c.Request.Context(), req.TeamName)
 	if err != nil {
 		if errors.Is(err, teamservice.ErrTeamNotFound) {
+			c.JSON(http.StatusNotFound, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorNotFound,
+					Message: "resource not found",
+				}})
 			c.JSON(http.StatusNotFound, gin.H{"error": "team not found"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: models.ErrorBody{
+				Code:    models.ErrorInternal,
+				Message: "Internal server error",
+			}})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"team": team,
-	})
+	c.JSON(http.StatusOK, team)
 }

@@ -43,16 +43,39 @@ func (h *Handler) Create(c *gin.Context) {
 	var req CreatePRRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}) // avito style needed
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: models.ErrorBody{
+				Code:    models.ErrorBadRequest,
+				Message: "Invalid request payload",
+			}})
 		return
 	}
 	pr, err := h.s.CreatePR(c.Request.Context(), req.PullRequestID, req.PullRequestName, req.AuthorID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()}) // avito style needed
+		switch {
+		case errors.Is(err, prservice.ErrPRExists):
+			c.JSON(http.StatusConflict, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorPRExists,
+					Message: "PR already exists",
+				}})
+		case errors.Is(err, prservice.ErrUserNotFound) || errors.Is(err, prservice.ErrTeamNotFound):
+			c.JSON(http.StatusNotFound, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorNotFound,
+					Message: "resource not found",
+				}})
+		default:
+			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorInternal,
+					Message: "Internal server error",
+				},
+			})
+		}
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"pr": pr})
-
 }
 
 type MergePRRequest struct {
@@ -63,16 +86,29 @@ func (h *Handler) Merge(c *gin.Context) {
 	var req MergePRRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}) // avito style needed
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: models.ErrorBody{
+				Code:    models.ErrorBadRequest,
+				Message: "Invalid request payload",
+			}})
 		return
 	}
 	pr, err := h.s.MergePR(c.Request.Context(), req.PullRequestID)
 	if err != nil {
 		if errors.Is(err, prservice.ErrPRNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "PR not found"})
+			c.JSON(http.StatusNotFound, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorNotFound,
+					Message: "resource not found",
+				}})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()}) // avito style needed
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error: models.ErrorBody{
+				Code:    models.ErrorInternal,
+				Message: "Internal server error",
+			},
+		})
 		return
 	}
 
@@ -88,52 +124,57 @@ func (h *Handler) Reassign(c *gin.Context) {
 	var req ReassignPRRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}) // avito style needed
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error: models.ErrorBody{
+				Code:    models.ErrorBadRequest,
+				Message: "Invalid request payload",
+			}})
 		return
 	}
+
 	pr, newReviewerID, err := h.s.ReassignReviewer(c.Request.Context(), req.PullRequestID, req.OldReviewerID)
 	if err != nil {
 		switch {
 		case errors.Is(err, prservice.ErrPRNotFound):
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": gin.H{
-					"code":    "PR_NOT_FOUND",
-					"message": "PR not found",
+			c.JSON(http.StatusNotFound, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorNotFound,
+					Message: "PR not found",
 				},
 			})
 		case errors.Is(err, prservice.ErrUserNotFound):
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": gin.H{
-					"code":    "USER_NOT_FOUND",
-					"message": "User not found",
+			c.JSON(http.StatusNotFound, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorNotFound,
+					Message: "User not found",
 				},
 			})
 		case errors.Is(err, prservice.ErrPRMerged):
-			c.JSON(http.StatusConflict, gin.H{
-				"error": gin.H{
-					"code":    "PR_MERGED",
-					"message": "cannot reassign on merged PR",
+			c.JSON(http.StatusConflict, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorPRMerged,
+					Message: "cannot reassign on merged PR",
 				},
 			})
 		case errors.Is(err, prservice.ErrNotAssigned):
-			c.JSON(http.StatusConflict, gin.H{
-				"error": gin.H{
-					"code":    "NOT_ASSIGNED",
-					"message": "reviewer is not assigned to this PR",
+			c.JSON(http.StatusConflict, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorNotAssigned,
+					Message: "reviewer is not assigned to this PR",
 				},
 			})
 		case errors.Is(err, prservice.ErrNoCandidate):
-			c.JSON(http.StatusConflict, gin.H{
-				"error": gin.H{
-					"code":    "NO_CANDIDATE",
-					"message": "no active replacement candidate in team",
+			c.JSON(http.StatusConflict, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorNoCandidate,
+					Message: "no active replacement candidate in team",
 				},
 			})
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": gin.H{
-					"code":    "INTERNAL_ERROR",
-					"message": "Internal server error",
+			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorInternal,
+					Message: "Internal server error",
 				},
 			})
 		}
@@ -144,5 +185,4 @@ func (h *Handler) Reassign(c *gin.Context) {
 		"pr":          pr,
 		"replaced_by": newReviewerID,
 	})
-
 }

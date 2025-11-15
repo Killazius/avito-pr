@@ -18,6 +18,8 @@ const (
 	ErrorNotAssigned ErrorCode = "NOT_ASSIGNED"
 	ErrorNoCandidate ErrorCode = "NO_CANDIDATE"
 	ErrorNotFound    ErrorCode = "NOT_FOUND"
+	ErrorInternal    ErrorCode = "INTERNAL"
+	ErrorBadRequest  ErrorCode = "BAD_REQUEST"
 )
 
 type ErrorBody struct {
