@@ -71,6 +71,12 @@ func (h *Handler) Create(c *gin.Context) {
 					Code:    models.ErrorNotFound,
 					Message: "Team not found",
 				}})
+		case errors.Is(err, prservice.ErrUserInactive):
+			c.JSON(http.StatusConflict, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorBadRequest,
+					Message: "Author is not active",
+				}})
 		default:
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 				Error: models.ErrorBody{

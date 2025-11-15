@@ -54,6 +54,7 @@ var (
 	ErrPRMerged     = errors.New("cannot reassign reviewer for merged PR")
 	ErrNotAssigned  = errors.New("reviewer is not assigned to this PR")
 	ErrNoCandidate  = errors.New("no active replacement candidate in team")
+	ErrUserInactive = errors.New("user is not active")
 )
 
 func (s *Service) CreatePR(ctx context.Context, prID string, prName string, authorID string) (*models.PullRequest, error) {
@@ -79,7 +80,7 @@ func (s *Service) CreatePR(ctx context.Context, prID string, prName string, auth
 			return ErrUserNotFound
 		}
 		if user.IsActive == false {
-			return fmt.Errorf("author user is not active")
+			return ErrUserInactive
 		}
 		teamExists, err := s.teamRepo.TeamExists(ctx, user.TeamName)
 		if err != nil {
