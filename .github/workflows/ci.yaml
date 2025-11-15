@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: false
+
+      - name: Download dependencies
+        run: |
+          go mod tidy
+          go mod download
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+          args: --out-format=tab
+          skip-cache: true
+
+      - name: Test
+        run: |
+          go test -v -race -parallel 5 -shuffle=on -coverprofile=cover.out -covermode=atomic ./...
