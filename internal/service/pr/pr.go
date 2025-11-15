@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Killazius/avito-pr/internal/models"
+	"github.com/Killazius/avito-pr/internal/repository/postgres"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 )
 
@@ -69,6 +70,9 @@ func (s *Service) CreatePR(ctx context.Context, prID string, prName string, auth
 		}
 		user, err := s.userRepo.GetUserByID(ctx, authorID)
 		if err != nil {
+			if errors.Is(err, postgres.ErrUserNotFound) {
+				return ErrUserNotFound
+			}
 			return fmt.Errorf("failed to get author: %w", err)
 		}
 		if user == nil {
@@ -196,10 +200,10 @@ func (s *Service) ReassignReviewer(ctx context.Context, pullRequestID, oldUserID
 
 		author, err := s.userRepo.GetUserByID(ctx, pr.AuthorID)
 		if err != nil {
+			if errors.Is(err, postgres.ErrUserNotFound) {
+				return ErrUserNotFound
+			}
 			return fmt.Errorf("failed to get PR author: %w", err)
-		}
-		if author == nil {
-			return ErrUserNotFound
 		}
 		candidates, err := s.userRepo.GetActiveTeamMembers(ctx, author.TeamName, oldUserID, author.UserID)
 		if err != nil {

@@ -12,12 +12,12 @@ import (
 
 func (r *Repository) CreateOrUpdateUser(ctx context.Context, user models.TeamMember, teamID string) error {
 	query := `
-        INSERT INTO users (user_id, username, team_id, is_active, created_at, updated_at) 
+        INSERT INTO users (user_id, username, team_name, is_active, created_at, updated_at) 
         VALUES ($1, $2, $3, $4, NOW(), NOW())
         ON CONFLICT (user_id) 
         DO UPDATE SET 
             username = EXCLUDED.username,
-            team_id = EXCLUDED.team_id,
+            team_name = EXCLUDED.team_name,
             is_active = EXCLUDED.is_active,
             updated_at = NOW()`
 
@@ -48,7 +48,7 @@ func (r *Repository) UpdateIsActiveStatus(ctx context.Context, userID string, is
 }
 
 func (r *Repository) GetUserByID(ctx context.Context, userID string) (*models.User, error) {
-	query := `SELECT user_id, username, team_id, is_active FROM users WHERE user_id = $1`
+	query := `SELECT user_id, username, team_name, is_active FROM users WHERE user_id = $1`
 	conn := r.getConn(ctx)
 	var user models.User
 	err := conn.QueryRow(ctx, query, userID).Scan(&user.UserID, &user.Username, &user.TeamName, &user.IsActive)
@@ -63,9 +63,9 @@ func (r *Repository) GetUserByID(ctx context.Context, userID string) (*models.Us
 
 func (r *Repository) GetActiveTeamMembers(ctx context.Context, teamID, authorID string, excludeIDs ...string) ([]*models.User, error) {
 	query := `
-        SELECT user_id, username, team_id, is_active
+        SELECT user_id, username, team_name, is_active
         FROM users 
-        WHERE team_id = $1 AND is_active = true`
+        WHERE team_name = $1 AND is_active = true`
 
 	args := []interface{}{teamID}
 

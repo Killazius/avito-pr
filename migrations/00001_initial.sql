@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS teams (
 CREATE TABLE IF NOT EXISTS users (
                                      user_id VARCHAR(50) PRIMARY KEY,
                                      username VARCHAR(255) NOT NULL,
-                                     team_id VARCHAR(255) NOT NULL REFERENCES teams(name) ON DELETE CASCADE,
+                                     team_name VARCHAR(255) NOT NULL REFERENCES teams(name) ON DELETE CASCADE,
                                      is_active BOOLEAN DEFAULT FALSE,
                                      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

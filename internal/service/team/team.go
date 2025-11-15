@@ -2,9 +2,11 @@ package team
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Killazius/avito-pr/internal/models"
+	"github.com/Killazius/avito-pr/internal/repository/postgres"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 )
 
@@ -80,12 +82,12 @@ func (s *Service) GetTeam(ctx context.Context, teamName string) (*models.Team, e
 	if teamName == "" {
 		return nil, fmt.Errorf("team name cannot be empty")
 	}
-	exists, err := s.teamRepo.TeamExists(ctx, teamName)
+	team, err := s.teamRepo.GetTeamWithMembers(ctx, teamName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to check team existence: %w", err)
+		if errors.Is(err, postgres.ErrTeamNotFound) {
+			return nil, ErrTeamNotFound
+		}
+		return nil, fmt.Errorf("failed to get team with members: %w", err)
 	}
-	if !exists {
-		return nil, ErrTeamNotFound
-	}
-	return s.teamRepo.GetTeamWithMembers(ctx, teamName)
+	return team, nil
 }

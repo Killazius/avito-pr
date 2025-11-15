@@ -59,11 +59,17 @@ func (h *Handler) Create(c *gin.Context) {
 					Code:    models.ErrorPRExists,
 					Message: "PR already exists",
 				}})
-		case errors.Is(err, prservice.ErrUserNotFound) || errors.Is(err, prservice.ErrTeamNotFound):
+		case errors.Is(err, prservice.ErrUserNotFound):
 			c.JSON(http.StatusNotFound, models.ErrorResponse{
 				Error: models.ErrorBody{
 					Code:    models.ErrorNotFound,
-					Message: "resource not found",
+					Message: "Author not found",
+				}})
+		case errors.Is(err, prservice.ErrTeamNotFound):
+			c.JSON(http.StatusNotFound, models.ErrorResponse{
+				Error: models.ErrorBody{
+					Code:    models.ErrorNotFound,
+					Message: "Team not found",
 				}})
 		default:
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{

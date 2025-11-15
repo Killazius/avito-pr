@@ -31,23 +31,23 @@ func (r *Repository) TeamExists(ctx context.Context, name string) (bool, error) 
 	return exists, nil
 }
 
+var ErrTeamNotFound = fmt.Errorf("team not found")
+
 func (r *Repository) GetTeamWithMembers(ctx context.Context, name string) (*models.Team, error) {
 	conn := r.db
 
-	var teamExists bool
-	err := conn.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM teams WHERE name = $1)", name).
-		Scan(&teamExists)
+	exists, err := r.TeamExists(ctx, name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check team existence: %w", err)
 	}
-	if !teamExists {
-		return nil, nil
+	if !exists {
+		return nil, ErrTeamNotFound
 	}
 
 	rows, err := conn.Query(ctx,
 		`SELECT user_id, username, is_active 
          FROM users 
-         WHERE team_id = $1 
+         WHERE team_name = $1 
          ORDER BY username`, name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get team members: %w", err)
