@@ -24,9 +24,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
-          version: latest
-          args: --out-format=tab
-          skip-cache: true
+          version: v2.1
 
       - name: Test
         run: |
