@@ -91,7 +91,6 @@ func (h *Handler) GetTeam(c *gin.Context) {
 					Code:    models.ErrorNotFound,
 					Message: "resource not found",
 				}})
-			c.JSON(http.StatusNotFound, gin.H{"error": "team not found"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
