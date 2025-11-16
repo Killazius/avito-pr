@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Killazius/avito-pr/internal/models"
+	"github.com/Killazius/avito-pr/internal/server"
 	prservice "github.com/Killazius/avito-pr/internal/service"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -18,14 +19,12 @@ type PRService interface {
 }
 
 type PRHandler struct {
-	s   PRService
-	log *zap.Logger
+	s PRService
 }
 
-func NewPRHandler(s PRService, log *zap.Logger) *PRHandler {
+func NewPRHandler(s PRService) *PRHandler {
 	return &PRHandler{
-		s:   s,
-		log: log,
+		s: s,
 	}
 }
 
@@ -45,10 +44,11 @@ type CreatePRRequest struct {
 }
 
 func (h *PRHandler) Create(c *gin.Context) {
+	log := server.GetLoggerFromContext(c)
 	var req CreatePRRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.log.Warn("invalid request payload for Create PR",
+		log.Warn("invalid request payload for Create PR",
 			zap.Error(err),
 			zap.String("method", "Create"))
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
@@ -59,7 +59,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 		return
 	}
 
-	h.log.Info("creating PR",
+	log.Info("creating PR",
 		zap.String("pull_request_id", req.PullRequestID),
 		zap.String("pull_request_name", req.PullRequestName),
 		zap.String("author_id", req.AuthorID))
@@ -68,7 +68,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, prservice.ErrPRExists):
-			h.log.Warn("PR already exists",
+			log.Warn("PR already exists",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.Error(err))
 			c.JSON(http.StatusConflict, models.ErrorResponse{
@@ -77,7 +77,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 					Message: "PR already exists",
 				}})
 		case errors.Is(err, prservice.ErrUserNotFound):
-			h.log.Warn("author not found",
+			log.Warn("author not found",
 				zap.String("author_id", req.AuthorID),
 				zap.Error(err))
 			c.JSON(http.StatusNotFound, models.ErrorResponse{
@@ -86,7 +86,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 					Message: "Author not found",
 				}})
 		case errors.Is(err, prservice.ErrTeamNotFound):
-			h.log.Warn("team not found",
+			log.Warn("team not found",
 				zap.String("author_id", req.AuthorID),
 				zap.Error(err))
 			c.JSON(http.StatusNotFound, models.ErrorResponse{
@@ -95,7 +95,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 					Message: "Team not found",
 				}})
 		case errors.Is(err, prservice.ErrUserInactive):
-			h.log.Warn("author is not active",
+			log.Warn("author is not active",
 				zap.String("author_id", req.AuthorID),
 				zap.Error(err))
 			c.JSON(http.StatusConflict, models.ErrorResponse{
@@ -104,7 +104,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 					Message: "Author is not active",
 				}})
 		default:
-			h.log.Error("internal server error while creating PR",
+			log.Error("internal server error while creating PR",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.Error(err))
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
@@ -117,8 +117,6 @@ func (h *PRHandler) Create(c *gin.Context) {
 		return
 	}
 
-	h.log.Info("PR created successfully",
-		zap.String("pull_request_id", req.PullRequestID))
 	c.JSON(http.StatusCreated, gin.H{"pr": pr})
 }
 
@@ -127,10 +125,11 @@ type MergePRRequest struct {
 }
 
 func (h *PRHandler) Merge(c *gin.Context) {
+	log := server.GetLoggerFromContext(c)
 	var req MergePRRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.log.Warn("invalid request payload for Merge PR",
+		log.Warn("invalid request payload for Merge PR",
 			zap.Error(err),
 			zap.String("method", "Merge"))
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
@@ -141,13 +140,13 @@ func (h *PRHandler) Merge(c *gin.Context) {
 		return
 	}
 
-	h.log.Info("merging PR",
+	log.Info("merging PR",
 		zap.String("pull_request_id", req.PullRequestID))
 
 	pr, err := h.s.MergePR(c.Request.Context(), req.PullRequestID)
 	if err != nil {
 		if errors.Is(err, prservice.ErrPRNotFound) {
-			h.log.Warn("PR not found",
+			log.Warn("PR not found",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.Error(err))
 			c.JSON(http.StatusNotFound, models.ErrorResponse{
@@ -157,7 +156,7 @@ func (h *PRHandler) Merge(c *gin.Context) {
 				}})
 			return
 		}
-		h.log.Error("internal server error while merging PR",
+		log.Error("internal server error while merging PR",
 			zap.String("pull_request_id", req.PullRequestID),
 			zap.Error(err))
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
@@ -169,8 +168,6 @@ func (h *PRHandler) Merge(c *gin.Context) {
 		return
 	}
 
-	h.log.Info("PR merged successfully",
-		zap.String("pull_request_id", req.PullRequestID))
 	c.JSON(http.StatusOK, gin.H{"pr": pr})
 }
 
@@ -180,10 +177,11 @@ type ReassignPRRequest struct {
 }
 
 func (h *PRHandler) Reassign(c *gin.Context) {
+	log := server.GetLoggerFromContext(c)
 	var req ReassignPRRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.log.Warn("invalid request payload for Reassign PR",
+		log.Warn("invalid request payload for Reassign PR",
 			zap.Error(err),
 			zap.String("method", "Reassign"))
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
@@ -194,7 +192,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 		return
 	}
 
-	h.log.Info("reassigning reviewer",
+	log.Info("reassigning reviewer",
 		zap.String("pull_request_id", req.PullRequestID),
 		zap.String("old_reviewer_id", req.OldReviewerID))
 
@@ -202,7 +200,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, prservice.ErrPRNotFound):
-			h.log.Warn("PR not found",
+			log.Warn("PR not found",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.Error(err))
 			c.JSON(http.StatusNotFound, models.ErrorResponse{
@@ -212,7 +210,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 				},
 			})
 		case errors.Is(err, prservice.ErrUserNotFound):
-			h.log.Warn("user not found",
+			log.Warn("user not found",
 				zap.String("old_reviewer_id", req.OldReviewerID),
 				zap.Error(err))
 			c.JSON(http.StatusNotFound, models.ErrorResponse{
@@ -222,7 +220,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 				},
 			})
 		case errors.Is(err, prservice.ErrPRMerged):
-			h.log.Warn("cannot reassign on merged PR",
+			log.Warn("cannot reassign on merged PR",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.Error(err))
 			c.JSON(http.StatusConflict, models.ErrorResponse{
@@ -232,7 +230,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 				},
 			})
 		case errors.Is(err, prservice.ErrNotAssigned):
-			h.log.Warn("reviewer is not assigned to this PR",
+			log.Warn("reviewer is not assigned to this PR",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.String("old_reviewer_id", req.OldReviewerID),
 				zap.Error(err))
@@ -243,7 +241,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 				},
 			})
 		case errors.Is(err, prservice.ErrNoCandidate):
-			h.log.Warn("no active replacement candidate in team",
+			log.Warn("no active replacement candidate in team",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.Error(err))
 			c.JSON(http.StatusConflict, models.ErrorResponse{
@@ -253,7 +251,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 				},
 			})
 		default:
-			h.log.Error("internal server error while reassigning reviewer",
+			log.Error("internal server error while reassigning reviewer",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.Error(err))
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
@@ -266,10 +264,6 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 		return
 	}
 
-	h.log.Info("reviewer reassigned successfully",
-		zap.String("pull_request_id", req.PullRequestID),
-		zap.String("old_reviewer_id", req.OldReviewerID),
-		zap.String("new_reviewer_id", newReviewerID))
 	c.JSON(http.StatusOK, gin.H{
 		"pr":          pr,
 		"replaced_by": newReviewerID,

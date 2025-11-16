@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/Killazius/avito-pr/internal/config"
-	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -48,8 +46,7 @@ func registerRoutes(log *zap.Logger, handlers ...Handler) *gin.Engine {
 
 	r := gin.New()
 	r.Use(gin.Recovery())
-	r.Use(ginzap.Ginzap(log, time.RFC3339, true))
-	r.Use(ginzap.RecoveryWithZap(log, true))
+	r.Use(RequestLogger(log))
 	for _, handler := range handlers {
 		handler.RegisterRoutes(r)
 	}

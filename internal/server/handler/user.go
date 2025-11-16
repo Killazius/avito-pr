@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Killazius/avito-pr/internal/models"
+	"github.com/Killazius/avito-pr/internal/server"
 	userservice "github.com/Killazius/avito-pr/internal/service"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -17,14 +18,12 @@ type UserService interface {
 }
 
 type UserHandler struct {
-	s   UserService
-	log *zap.Logger
+	s UserService
 }
 
-func NewHandler(s UserService, log *zap.Logger) *UserHandler {
+func NewHandler(s UserService) *UserHandler {
 	return &UserHandler{
-		s:   s,
-		log: log,
+		s: s,
 	}
 }
 
@@ -42,9 +41,10 @@ type SetUserStatusRequest struct {
 }
 
 func (h *UserHandler) SetUserStatus(c *gin.Context) {
+	log := server.GetLoggerFromContext(c)
 	var req SetUserStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.log.Warn("invalid request payload for Set User Status",
+		log.Warn("invalid request payload for Set User Status",
 			zap.Error(err),
 			zap.String("method", "SetUserStatus"))
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
@@ -55,14 +55,14 @@ func (h *UserHandler) SetUserStatus(c *gin.Context) {
 		return
 	}
 
-	h.log.Info("updating user status",
+	log.Info("updating user status",
 		zap.String("user_id", req.UserID),
 		zap.Bool("is_active", req.IsActive))
 
 	user, err := h.s.UpdateUserStatus(c.Request.Context(), req.UserID, req.IsActive)
 	if err != nil {
 		if errors.Is(err, userservice.ErrUserNotFound) {
-			h.log.Warn("user not found",
+			log.Warn("user not found",
 				zap.String("user_id", req.UserID),
 				zap.Error(err))
 			c.JSON(http.StatusNotFound, models.ErrorResponse{
@@ -72,7 +72,7 @@ func (h *UserHandler) SetUserStatus(c *gin.Context) {
 				}})
 			return
 		}
-		h.log.Error("internal server error while updating user status",
+		log.Error("internal server error while updating user status",
 			zap.String("user_id", req.UserID),
 			zap.Error(err))
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
@@ -83,7 +83,7 @@ func (h *UserHandler) SetUserStatus(c *gin.Context) {
 		return
 	}
 
-	h.log.Info("user status updated successfully",
+	log.Info("user status updated successfully",
 		zap.String("user_id", req.UserID),
 		zap.Bool("is_active", req.IsActive))
 	c.JSON(http.StatusOK, gin.H{"user": user})
@@ -94,9 +94,10 @@ type GetReviewsRequest struct {
 }
 
 func (h *UserHandler) GetReview(c *gin.Context) {
+	log := server.GetLoggerFromContext(c)
 	var req GetReviewsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		h.log.Warn("invalid request payload for Get Review",
+		log.Warn("invalid request payload for Get Review",
 			zap.Error(err),
 			zap.String("method", "GetReview"))
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
@@ -107,13 +108,13 @@ func (h *UserHandler) GetReview(c *gin.Context) {
 		return
 	}
 
-	h.log.Info("getting user reviews",
+	log.Info("getting user reviews",
 		zap.String("user_id", req.UserID))
 
 	reviews, err := h.s.GetUserReviews(c.Request.Context(), req.UserID)
 	if err != nil {
 		if errors.Is(err, userservice.ErrUserNotFound) {
-			h.log.Warn("user not found",
+			log.Warn("user not found",
 				zap.String("user_id", req.UserID),
 				zap.Error(err))
 			c.JSON(http.StatusNotFound, models.ErrorResponse{
@@ -123,7 +124,7 @@ func (h *UserHandler) GetReview(c *gin.Context) {
 				}})
 			return
 		}
-		h.log.Error("internal server error while getting user reviews",
+		log.Error("internal server error while getting user reviews",
 			zap.String("user_id", req.UserID),
 			zap.Error(err))
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
@@ -134,9 +135,12 @@ func (h *UserHandler) GetReview(c *gin.Context) {
 		return
 	}
 
-	h.log.Info("user reviews retrieved successfully",
-		zap.String("user_id", req.UserID),
-		zap.Int("reviews_count", len(reviews)))
+	if len(reviews) > 0 {
+		log.Info("user reviews retrieved",
+			zap.String("user_id", req.UserID),
+			zap.Int("reviews_count", len(reviews)),
+			zap.String("latest_pr_id", reviews[0].PullRequestID))
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"user_id":       req.UserID,
 		"pull_requests": reviews,
