@@ -3,7 +3,7 @@ version: '3'
 dotenv: ['.env']
 vars:
   TEST_FLAGS: "-v -race -parallel 5 -shuffle=on"
-  COVER_FLAGS: "-coverprofile=./cover.out -covermode=atomic"
+  COVER_FLAGS: "-coverprofile=./cover.out -covermode=atomic -coverpkg=./..."
 
 tasks:
   docker:
@@ -17,6 +17,11 @@ tasks:
     cmds:
       - docker compose down
       - docker image prune -f
+
+  mock:
+    desc: "Generate mocks using mockery with config"
+    cmds:
+      - mockery
 
   test:
     desc: "Run tests with race detection and coverage"

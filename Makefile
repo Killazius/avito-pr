@@ -2,10 +2,10 @@ include .env
 
 
 TEST_FLAGS ?= -v -race -parallel 5 -shuffle=on
-COVER_FLAGS ?= -coverprofile=./cover.out -covermode=atomic
+COVER_FLAGS ?= -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
 BINARY_NAME ?= bin/app
 
-.PHONY: docker clean-docker test lint deps build clean
+.PHONY: docker clean-docker test lint deps build clean mock
 .DEFAULT_GOAL := help
 
 docker: clean-docker
@@ -32,7 +32,8 @@ build: deps
 clean:
 	rm -rf bin/
 	rm -f cover.out
-
+mock:
+	mockery
 help:
 	@echo "Available targets:"
 	@echo "  docker      - Rebuild and restart docker containers"
@@ -42,3 +43,4 @@ help:
 	@echo "  deps        - Download dependencies"
 	@echo "  build       - Build application"
 	@echo "  clean       - Clean build artifacts"
+	@echo "  mock        - Generate mocks using mockery with config"
