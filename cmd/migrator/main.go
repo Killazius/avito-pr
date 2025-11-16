@@ -36,12 +36,13 @@ func main() {
 	defer pool.Close()
 	sqlDB := stdlib.OpenDBFromPool(pool)
 	defer func() {
-		if errClose := sqlDB.Close(); err != nil {
+		if errClose := sqlDB.Close(); errClose != nil {
 			log.Error("failed to close sqlDB", zap.Error(errClose))
 		}
 	}()
-	if err := goose.Run(*command, sqlDB, cfg.Postgres.MigrationsPath); err != nil {
-		log.Fatal("failed to run goose command", zap.Error(err), zap.String("command", *command))
+	if err = goose.Run(*command, sqlDB, cfg.Postgres.MigrationsPath); err != nil {
+		log.Error("failed to run goose command", zap.Error(err), zap.String("command", *command))
+		return
 	}
 
 	log.Info("goose command executed successfully", zap.String("command", *command))

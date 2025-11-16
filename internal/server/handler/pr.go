@@ -30,11 +30,9 @@ func NewPRHandler(s PRService) *PRHandler {
 
 func (h *PRHandler) RegisterRoutes(r gin.IRouter) {
 	prGroup := r.Group("/pullRequest")
-	{
-		prGroup.POST("/create", h.Create)
-		prGroup.POST("/merge", h.Merge)
-		prGroup.POST("/reassign", h.Reassign)
-	}
+	prGroup.POST("/create", h.Create)
+	prGroup.POST("/merge", h.Merge)
+	prGroup.POST("/reassign", h.Reassign)
 }
 
 type CreatePRRequest struct {
@@ -56,9 +54,9 @@ func (h *PRHandler) Create(c *gin.Context) {
 				Code:    models.ErrorBadRequest,
 				Message: "Invalid request payload",
 			}})
+
 		return
 	}
-
 	log.Info("creating PR",
 		zap.String("pull_request_id", req.PullRequestID),
 		zap.String("pull_request_name", req.PullRequestName),
@@ -114,6 +112,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 				},
 			})
 		}
+
 		return
 	}
 
@@ -137,6 +136,7 @@ func (h *PRHandler) Merge(c *gin.Context) {
 				Code:    models.ErrorBadRequest,
 				Message: "Invalid request payload",
 			}})
+
 		return
 	}
 
@@ -154,6 +154,7 @@ func (h *PRHandler) Merge(c *gin.Context) {
 					Code:    models.ErrorNotFound,
 					Message: "resource not found",
 				}})
+
 			return
 		}
 		log.Error("internal server error while merging PR",
@@ -165,6 +166,7 @@ func (h *PRHandler) Merge(c *gin.Context) {
 				Message: "Internal server error",
 			},
 		})
+
 		return
 	}
 
@@ -189,6 +191,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 				Code:    models.ErrorBadRequest,
 				Message: "Invalid request payload",
 			}})
+
 		return
 	}
 
@@ -261,6 +264,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 				},
 			})
 		}
+
 		return
 	}
 

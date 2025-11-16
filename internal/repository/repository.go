@@ -26,10 +26,12 @@ func New(cfg config.PostgresConfig) (*postgres.Repository, *manager.Manager, err
 
 func CreatePool(cfg config.PostgresConfig) (*pgxpool.Pool, error) {
 	poolConfig, err := pgxpool.ParseConfig("")
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse connection string: %w", err)
 	}
 	port, err := strconv.ParseUint(cfg.Port, 10, 16)
+
 	if err != nil {
 		return nil, fmt.Errorf("invalid port %s: %w", cfg.Port, err)
 	}
@@ -38,6 +40,7 @@ func CreatePool(cfg config.PostgresConfig) (*pgxpool.Pool, error) {
 	poolConfig.ConnConfig.Database = cfg.Database
 	poolConfig.ConnConfig.User = cfg.Username
 	poolConfig.ConnConfig.Password = cfg.Password
+
 	if cfg.SSLMode == "disable" {
 		poolConfig.ConnConfig.TLSConfig = nil
 	}
@@ -49,6 +52,7 @@ func CreatePool(cfg config.PostgresConfig) (*pgxpool.Pool, error) {
 	poolConfig.ConnConfig.ConnectTimeout = cfg.Timeout
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create connection pool: %w", err)
 	}

@@ -29,10 +29,8 @@ func NewHandler(s UserService) *UserHandler {
 
 func (h *UserHandler) RegisterRoutes(r gin.IRouter) {
 	usersGroup := r.Group("/users")
-	{
-		usersGroup.POST("/setIsActive", h.SetUserStatus)
-		usersGroup.GET("/getReview", h.GetReview)
-	}
+	usersGroup.POST("/setIsActive", h.SetUserStatus)
+	usersGroup.GET("/getReview", h.GetReview)
 }
 
 type SetUserStatusRequest struct {
@@ -47,6 +45,7 @@ func (h *UserHandler) SetUserStatus(c *gin.Context) {
 		log.Warn("invalid request payload for Set User Status",
 			zap.Error(err),
 			zap.String("method", "SetUserStatus"))
+
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error: models.ErrorBody{
 				Code:    models.ErrorBadRequest,

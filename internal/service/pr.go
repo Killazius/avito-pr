@@ -68,7 +68,7 @@ func (s *PRService) CreatePR(ctx context.Context, prID string, prName string, au
 			Status:          models.PRStatusOpen,
 		}
 		if errCreate := s.prRepo.CreatePR(ctx, pr); errCreate != nil {
-			return fmt.Errorf("failed to create PR: %w", err)
+			return fmt.Errorf("failed to create PR: %w", errCreate)
 		}
 		reviewers, err := s.autoAssignReviewers(ctx, user)
 		if err != nil && !errors.Is(err, ErrNoReviewers) {
@@ -84,31 +84,14 @@ func (s *PRService) CreatePR(ctx context.Context, prID string, prName string, au
 	if err != nil {
 		return nil, err
 	}
-	return s.prRepo.GetPRByID(ctx, prID)
-}
-
-func (s *PRService) autoAssignReviewers(ctx context.Context, author *models.User) ([]string, error) {
-	candidates, err := s.userRepo.GetActiveTeamMembers(ctx, author.TeamName, author.UserID)
+	pr, err := s.prRepo.GetPRByID(ctx, prID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get team members: %w", err)
+		if errors.Is(err, postgres.ErrPRNotFound) {
+			return nil, ErrPRNotFound
+		}
+		return nil, fmt.Errorf("failed to get PR: %w", err)
 	}
-
-	if len(candidates) == 0 {
-		return nil, ErrNoReviewers
-	}
-	rand.New(rand.NewSource(time.Now().UnixNano()))
-	rand.Shuffle(len(candidates), func(i, j int) {
-		candidates[i], candidates[j] = candidates[j], candidates[i]
-	})
-
-	maxReviewers := min(2, len(candidates))
-	reviewerIDs := make([]string, 0, maxReviewers)
-
-	for i := 0; i < maxReviewers; i++ {
-		reviewerIDs = append(reviewerIDs, candidates[i].UserID)
-	}
-
-	return reviewerIDs, nil
+	return pr, nil
 }
 
 func (s *PRService) MergePR(ctx context.Context, prID string) (*models.PullRequest, error) {
@@ -118,6 +101,9 @@ func (s *PRService) MergePR(ctx context.Context, prID string) (*models.PullReque
 	err := s.trManager.Do(ctx, func(ctx context.Context) error {
 		pr, err := s.prRepo.GetPRByID(ctx, prID)
 		if err != nil {
+			if errors.Is(err, postgres.ErrPRNotFound) {
+				return ErrPRNotFound
+			}
 			return fmt.Errorf("failed to get PR: %w", err)
 		}
 		if pr == nil {
@@ -221,4 +207,28 @@ func (s *PRService) ReassignReviewer(ctx context.Context, pullRequestID, oldUser
 	}
 
 	return resultPR, newReviewerID, nil
+}
+
+func (s *PRService) autoAssignReviewers(ctx context.Context, author *models.User) ([]string, error) {
+	candidates, err := s.userRepo.GetActiveTeamMembers(ctx, author.TeamName, author.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get team members: %w", err)
+	}
+
+	if len(candidates) == 0 {
+		return nil, ErrNoReviewers
+	}
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+	rand.Shuffle(len(candidates), func(i, j int) {
+		candidates[i], candidates[j] = candidates[j], candidates[i]
+	})
+
+	maxReviewers := min(2, len(candidates))
+	reviewerIDs := make([]string, 0, maxReviewers)
+
+	for i := 0; i < maxReviewers; i++ {
+		reviewerIDs = append(reviewerIDs, candidates[i].UserID)
+	}
+
+	return reviewerIDs, nil
 }

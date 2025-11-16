@@ -2,34 +2,29 @@ package logger
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 
 	"go.uber.org/zap"
 )
 
-var errDefaultLogger = errors.New("default logger")
-
 func MustLoad(path string) *zap.Logger {
 	log, err := load(path)
 	if err != nil {
-		if errors.Is(err, errDefaultLogger) {
-			log.Warn("using default logger because config file not found",
-				zap.String("path", path))
-		} else {
-			panic(fmt.Sprintf("logger load error: %s", err))
-		}
+		panic(fmt.Sprintf("logger load error: %s", err))
 	}
 	return log
 }
+
 func load(path string) (*zap.Logger, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		log, logErr := zap.NewProduction(zap.AddStacktrace(zap.ErrorLevel), zap.AddCaller())
 		if logErr != nil {
 			return nil, fmt.Errorf("failed to create default logger: %w", logErr)
 		}
-		return log, errDefaultLogger
+		log.Warn("using default logger because config file not found",
+			zap.String("path", path))
+		return log, nil
 	}
 
 	configData, err := os.ReadFile(path)

@@ -22,10 +22,12 @@ func (r *Repository) CreatePR(ctx context.Context, pr *models.PullRequest) error
 		pr.AuthorID,
 		pr.Status,
 	)
+
 	if err != nil {
 		return fmt.Errorf("failed to create PR: %w", err)
 	}
 	return nil
+
 }
 func (r *Repository) PRExists(ctx context.Context, prID string) (bool, error) {
 	query := `SELECT EXISTS(SELECT 1 FROM pull_requests WHERE id = $1)`
@@ -58,9 +60,10 @@ func (r *Repository) GetPRByID(ctx context.Context, prID string) (*models.PullRe
 		&pr.CreatedAt,
 		&mergedAt,
 	)
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
+			return nil, ErrPRNotFound
 		}
 		return nil, fmt.Errorf("failed to get PR: %w", err)
 	}
@@ -126,7 +129,6 @@ func (r *Repository) MarkPRAsMerged(ctx context.Context, prID string, status mod
 	}
 
 	return nil
-
 }
 func (r *Repository) RemoveReviewer(ctx context.Context, prID, userID string) error {
 	query := `DELETE FROM pr_reviewers WHERE pr_id = $1 AND user_id = $2`

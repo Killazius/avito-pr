@@ -35,6 +35,7 @@ func (h *StatsHandler) GetStats(c *gin.Context) {
 				Code:    models.ErrorInternal,
 				Message: "Internal server error",
 			}})
+
 		return
 	}
 	c.JSON(http.StatusOK, stats)

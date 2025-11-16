@@ -63,6 +63,7 @@ func (s *Server) Run() error {
 		zap.String("addr", s.server.Addr),
 		zap.String("timeout", s.cfg.Timeout.Server.String()))
 	err := s.server.ListenAndServe()
+
 	if errors.Is(err, http.ErrServerClosed) {
 		return nil
 	}
@@ -71,10 +72,12 @@ func (s *Server) Run() error {
 func (s *Server) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), s.cfg.Timeout.Server)
 	defer cancel()
+
 	if err := s.server.Shutdown(ctx); err != nil {
 		s.log.Warn("failed to shutdown server", zap.Error(err))
+
 		if closeErr := s.server.Close(); closeErr != nil {
-			return fmt.Errorf("shutdown error: %v, close error: %v", err, closeErr)
+			return fmt.Errorf("shutdown error: %w, close error: %w", err, closeErr)
 		}
 		return err
 	}

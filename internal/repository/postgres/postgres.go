@@ -13,8 +13,11 @@ type Repository struct {
 	getter *trmpgx.CtxGetter
 }
 
-var ErrUserNotFound = errors.New("user not found")
-var ErrTeamNotFound = errors.New("team not found")
+var (
+	ErrUserNotFound = errors.New("user not found")
+	ErrTeamNotFound = errors.New("team not found")
+	ErrPRNotFound   = errors.New("PR not found")
+)
 
 func New(
 	db *pgxpool.Pool,
@@ -29,6 +32,7 @@ func New(
 func (r *Repository) Close() {
 	r.db.Close()
 }
+
 func (r *Repository) getConn(ctx context.Context) trmpgx.Tr {
 	return r.getter.DefaultTrOrDB(ctx, r.db)
 }

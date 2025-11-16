@@ -49,7 +49,7 @@ func New(log *zap.Logger, cfg *config.Config) *App {
 func (a *App) Run() {
 	defer func() {
 		if r := recover(); r != nil {
-			a.log.Error("application panicked and recovered", zap.Error(r.(error)))
+			a.log.Error("application panicked and recovered")
 			a.Stop()
 		}
 	}()

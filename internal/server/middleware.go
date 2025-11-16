@@ -29,6 +29,7 @@ func GetLoggerFromContext(ctx *gin.Context) *zap.Logger {
 	}
 	return zap.L().With(zap.String("error", "logger_not_found_in_context"))
 }
+
 func RequestLogger(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -72,11 +73,13 @@ func RequestLogger(logger *zap.Logger) gin.HandlerFunc {
 			zap.Duration("latency", latency),
 		}
 
-		if c.Writer.Status() >= 500 {
+		status := c.Writer.Status()
+		switch {
+		case status >= 500:
 			requestLogger.Error("request completed", fields...)
-		} else if c.Writer.Status() >= 400 {
+		case status >= 400:
 			requestLogger.Warn("request completed", fields...)
-		} else {
+		default:
 			requestLogger.Info("request completed", fields...)
 		}
 	}

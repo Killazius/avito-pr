@@ -63,7 +63,7 @@ func MustLoad() *Config {
 func load() (*Config, error) {
 	if _, err := os.Stat(".env"); err == nil {
 		if loadErr := godotenv.Load(); loadErr != nil {
-			return nil, fmt.Errorf("failed to load .env: %w", err)
+			return nil, fmt.Errorf("failed to load .env: %w", loadErr)
 		}
 	}
 	configPath := getConfigPath()

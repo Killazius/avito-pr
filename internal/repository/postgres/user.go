@@ -26,6 +26,7 @@ func (r *Repository) CreateOrUpdateUser(ctx context.Context, user models.TeamMem
 	if err != nil {
 		return fmt.Errorf("failed to create or update user: %w", err)
 	}
+
 	return nil
 }
 
@@ -56,6 +57,7 @@ func (r *Repository) GetUserByID(ctx context.Context, userID string) (*models.Us
 		}
 		return nil, fmt.Errorf("failed to get user by ID: %w", err)
 	}
+
 	return &user, nil
 }
 
@@ -84,6 +86,7 @@ func (r *Repository) GetActiveTeamMembers(ctx context.Context, teamID, authorID 
 
 	conn := r.getConn(ctx)
 	rows, err := conn.Query(ctx, query, args...)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get active team members: %w", err)
 	}
@@ -92,11 +95,13 @@ func (r *Repository) GetActiveTeamMembers(ctx context.Context, teamID, authorID 
 	var users []*models.User
 	for rows.Next() {
 		var user models.User
+
 		if err := rows.Scan(&user.UserID, &user.Username, &user.TeamName, &user.IsActive); err != nil {
 			return nil, fmt.Errorf("failed to scan user: %w", err)
 		}
 		users = append(users, &user)
 	}
+
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}

@@ -34,10 +34,8 @@ type CreateTeamRequest struct {
 
 func (h *TeamHandler) RegisterRoutes(r gin.IRouter) {
 	teamGroup := r.Group("/team")
-	{
-		teamGroup.POST("/add", h.CreateTeam)
-		teamGroup.GET("/get", h.GetTeam)
-	}
+	teamGroup.POST("/add", h.CreateTeam)
+	teamGroup.GET("/get", h.GetTeam)
 }
 
 func (h *TeamHandler) CreateTeam(c *gin.Context) {
@@ -59,7 +57,6 @@ func (h *TeamHandler) CreateTeam(c *gin.Context) {
 	log.Info("creating team",
 		zap.String("team_name", req.TeamName),
 		zap.Int("members_count", len(req.Members)))
-
 	team, err := h.s.CreateTeamWithMembers(c.Request.Context(), req.TeamName, req.Members)
 	if err != nil {
 		if errors.Is(err, service.ErrTeamExists) {
