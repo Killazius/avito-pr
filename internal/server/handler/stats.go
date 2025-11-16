@@ -36,6 +36,7 @@ func (h *StatsHandler) GetStats(c *gin.Context) {
 				Message: "Internal server error",
 			},
 		})
+
 		return
 	}
 	c.JSON(http.StatusOK, stats)

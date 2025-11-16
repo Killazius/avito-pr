@@ -16,6 +16,7 @@ func (r *Repository) CreateTeam(ctx context.Context, teamName string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create team: %w", err)
 	}
+
 	return nil
 }
 
@@ -56,8 +57,7 @@ func (r *Repository) GetTeamWithMembers(ctx context.Context, name string) (*mode
 	}
 	defer rows.Close()
 
-	var members []models.TeamMember
-
+	members := make([]models.TeamMember, 0)
 	for rows.Next() {
 		var member models.TeamMember
 		if err := rows.Scan(&member.UserID, &member.Username, &member.IsActive); err != nil {

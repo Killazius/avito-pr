@@ -36,9 +36,9 @@ func (h *PRHandler) RegisterRoutes(r gin.IRouter) {
 }
 
 type CreatePRRequest struct {
-	PullRequestID   string `json:"pull_request_id" binding:"required"`
-	PullRequestName string `json:"pull_request_name" binding:"required"`
-	AuthorID        string `json:"author_id" binding:"required"`
+	PullRequestID   string `binding:"required" json:"pull_request_id"`
+	PullRequestName string `binding:"required" json:"pull_request_name"`
+	AuthorID        string `binding:"required" json:"author_id"`
 }
 
 func (h *PRHandler) Create(c *gin.Context) {
@@ -55,6 +55,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 				Message: "Invalid request payload",
 			},
 		})
+
 		return
 	}
 	log.Info("creating PR",
@@ -120,7 +121,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 }
 
 type MergePRRequest struct {
-	PullRequestID string `json:"pull_request_id" binding:"required"`
+	PullRequestID string `binding:"required" json:"pull_request_id"`
 }
 
 func (h *PRHandler) Merge(c *gin.Context) {
@@ -137,6 +138,7 @@ func (h *PRHandler) Merge(c *gin.Context) {
 				Message: "Invalid request payload",
 			},
 		})
+
 		return
 	}
 
@@ -174,8 +176,8 @@ func (h *PRHandler) Merge(c *gin.Context) {
 }
 
 type ReassignPRRequest struct {
-	PullRequestID string `json:"pull_request_id" binding:"required"`
-	OldReviewerID string `json:"old_reviewer_id" binding:"required"`
+	PullRequestID string `binding:"required" json:"pull_request_id"`
+	OldReviewerID string `binding:"required" json:"old_reviewer_id"`
 }
 
 func (h *PRHandler) Reassign(c *gin.Context) {
@@ -192,6 +194,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 				Message: "Invalid request payload",
 			},
 		})
+
 		return
 	}
 

@@ -15,10 +15,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
 
 func TestPRHandler_Create(t *testing.T) {
+	t.Parallel()
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
@@ -48,9 +50,10 @@ func TestPRHandler_Create(t *testing.T) {
 			},
 			expectedStatus: http.StatusCreated,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response map[string]interface{}
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Contains(t, response, "pr")
 
 				pr, ok := response["pr"].(map[string]interface{})
@@ -67,12 +70,13 @@ func TestPRHandler_Create(t *testing.T) {
 				"pull_request_name": "Add search",
 				"author_id":         "u1",
 			},
-			mockSetup:      func(m *mocks.MockPRService) {},
+			mockSetup:      func(_ *mocks.MockPRService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorBadRequest, response.Error.Code)
 				assert.Equal(t, "Invalid request payload", response.Error.Message)
 			},
@@ -89,9 +93,10 @@ func TestPRHandler_Create(t *testing.T) {
 			},
 			expectedStatus: http.StatusConflict,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorPRExists, response.Error.Code)
 				assert.Equal(t, "PR already exists", response.Error.Message)
 			},
@@ -108,9 +113,10 @@ func TestPRHandler_Create(t *testing.T) {
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorNotFound, response.Error.Code)
 				assert.Equal(t, "Author not found", response.Error.Message)
 			},
@@ -127,9 +133,10 @@ func TestPRHandler_Create(t *testing.T) {
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorNotFound, response.Error.Code)
 				assert.Equal(t, "Team not found", response.Error.Message)
 			},
@@ -146,9 +153,10 @@ func TestPRHandler_Create(t *testing.T) {
 			},
 			expectedStatus: http.StatusConflict,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorBadRequest, response.Error.Code)
 				assert.Equal(t, "Author is not active", response.Error.Message)
 			},
@@ -165,9 +173,10 @@ func TestPRHandler_Create(t *testing.T) {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorInternal, response.Error.Code)
 				assert.Equal(t, "Internal server error", response.Error.Message)
 			},
@@ -176,6 +185,7 @@ func TestPRHandler_Create(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockService := new(mocks.MockPRService)
 			tt.mockSetup(mockService)
 
@@ -190,7 +200,7 @@ func TestPRHandler_Create(t *testing.T) {
 			handler.RegisterRoutes(router)
 
 			body, err := json.Marshal(tt.requestBody)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
@@ -207,6 +217,7 @@ func TestPRHandler_Create(t *testing.T) {
 }
 
 func TestPRHandler_Merge(t *testing.T) {
+	t.Parallel()
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
@@ -234,9 +245,10 @@ func TestPRHandler_Merge(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response map[string]interface{}
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Contains(t, response, "pr")
 				pr, ok := response["pr"].(map[string]interface{})
 				assert.True(t, ok, "pr should be a map")
@@ -249,12 +261,13 @@ func TestPRHandler_Merge(t *testing.T) {
 			requestBody: map[string]interface{}{
 				"some_field": "value",
 			},
-			mockSetup:      func(m *mocks.MockPRService) {},
+			mockSetup:      func(_ *mocks.MockPRService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorBadRequest, response.Error.Code)
 				assert.Equal(t, "Invalid request payload", response.Error.Message)
 			},
@@ -269,9 +282,10 @@ func TestPRHandler_Merge(t *testing.T) {
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorNotFound, response.Error.Code)
 				assert.Equal(t, "resource not found", response.Error.Message)
 			},
@@ -286,9 +300,10 @@ func TestPRHandler_Merge(t *testing.T) {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorInternal, response.Error.Code)
 				assert.Equal(t, "Internal server error", response.Error.Message)
 			},
@@ -297,6 +312,7 @@ func TestPRHandler_Merge(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockService := new(mocks.MockPRService)
 			tt.mockSetup(mockService)
 
@@ -311,7 +327,7 @@ func TestPRHandler_Merge(t *testing.T) {
 			handler.RegisterRoutes(router)
 
 			body, err := json.Marshal(tt.requestBody)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			req := httptest.NewRequest(http.MethodPost, "/pullRequest/merge", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
@@ -328,6 +344,7 @@ func TestPRHandler_Merge(t *testing.T) {
 }
 
 func TestPRHandler_Reassign(t *testing.T) {
+	t.Parallel()
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
@@ -356,9 +373,10 @@ func TestPRHandler_Reassign(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response map[string]interface{}
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Contains(t, response, "pr")
 				assert.Contains(t, response, "replaced_by")
 				assert.Equal(t, "u3", response["replaced_by"])
@@ -372,12 +390,13 @@ func TestPRHandler_Reassign(t *testing.T) {
 			requestBody: map[string]interface{}{
 				"old_reviewer_id": "u2",
 			},
-			mockSetup:      func(m *mocks.MockPRService) {},
+			mockSetup:      func(_ *mocks.MockPRService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorBadRequest, response.Error.Code)
 				assert.Equal(t, "Invalid request payload", response.Error.Message)
 			},
@@ -387,12 +406,13 @@ func TestPRHandler_Reassign(t *testing.T) {
 			requestBody: map[string]interface{}{
 				"pull_request_id": "pr-1001",
 			},
-			mockSetup:      func(m *mocks.MockPRService) {},
+			mockSetup:      func(_ *mocks.MockPRService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorBadRequest, response.Error.Code)
 				assert.Equal(t, "Invalid request payload", response.Error.Message)
 			},
@@ -408,9 +428,10 @@ func TestPRHandler_Reassign(t *testing.T) {
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorNotFound, response.Error.Code)
 				assert.Equal(t, "PR not found", response.Error.Message)
 			},
@@ -426,9 +447,10 @@ func TestPRHandler_Reassign(t *testing.T) {
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorNotFound, response.Error.Code)
 				assert.Equal(t, "User not found", response.Error.Message)
 			},
@@ -444,9 +466,10 @@ func TestPRHandler_Reassign(t *testing.T) {
 			},
 			expectedStatus: http.StatusConflict,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorPRMerged, response.Error.Code)
 				assert.Equal(t, "cannot reassign on merged PR", response.Error.Message)
 			},
@@ -462,9 +485,10 @@ func TestPRHandler_Reassign(t *testing.T) {
 			},
 			expectedStatus: http.StatusConflict,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorNotAssigned, response.Error.Code)
 				assert.Equal(t, "reviewer is not assigned to this PR", response.Error.Message)
 			},
@@ -480,9 +504,10 @@ func TestPRHandler_Reassign(t *testing.T) {
 			},
 			expectedStatus: http.StatusConflict,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorNoCandidate, response.Error.Code)
 				assert.Equal(t, "no active replacement candidate in team", response.Error.Message)
 			},
@@ -498,9 +523,10 @@ func TestPRHandler_Reassign(t *testing.T) {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorInternal, response.Error.Code)
 				assert.Equal(t, "Internal server error", response.Error.Message)
 			},
@@ -509,6 +535,7 @@ func TestPRHandler_Reassign(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockService := new(mocks.MockPRService)
 			tt.mockSetup(mockService)
 
@@ -523,7 +550,7 @@ func TestPRHandler_Reassign(t *testing.T) {
 			handler.RegisterRoutes(router)
 
 			body, err := json.Marshal(tt.requestBody)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()

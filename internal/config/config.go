@@ -28,23 +28,23 @@ type HTTPConfig struct {
 }
 
 type LoggerConfig struct {
-	Path string `yaml:"path" env-default:"config/logger.json"`
+	Path string `env-default:"config/logger.json" yaml:"path"`
 }
 
 type PostgresConfig struct {
-	Host     string `env:"POSTGRES_HOST" env-default:"localhost"`
-	Port     string `env:"POSTGRES_PORT" env-default:"5432"`
-	Username string `env:"POSTGRES_USER" env-default:"postgres"`
+	Host     string `env:"POSTGRES_HOST"     env-default:"localhost"`
+	Port     string `env:"POSTGRES_PORT"     env-default:"5432"`
+	Username string `env:"POSTGRES_USER"     env-default:"postgres"`
 	Password string `env:"POSTGRES_PASSWORD" env-default:"postgres"`
-	Database string `env:"POSTGRES_DB" env-default:"postgres"`
+	Database string `env:"POSTGRES_DB"       env-default:"postgres"`
 	SSLMode  string `env:"POSTGRES_SSL_MODE" env-default:"disable"`
 
-	MaxOpenConns    int32         `yaml:"max_open_conns" env-default:"25"`
-	MaxIdleConns    int32         `yaml:"max_idle_conns" env-default:"5"`
-	ConnMaxLifetime time.Duration `yaml:"conn_max_lifetime" env-default:"1h"`
-	ConnMaxIdleTime time.Duration `yaml:"conn_max_idle_time" env-default:"30m"`
-	Timeout         time.Duration `yaml:"timeout" env-default:"5s"`
-	MigrationsPath  string        `yaml:"migrations_path" env-default:"./migrations"`
+	MaxOpenConns    int32         `env-default:"25"           yaml:"max_open_conns"`
+	MaxIdleConns    int32         `env-default:"5"            yaml:"max_idle_conns"`
+	ConnMaxLifetime time.Duration `env-default:"1h"           yaml:"conn_max_lifetime"`
+	ConnMaxIdleTime time.Duration `env-default:"30m"          yaml:"conn_max_idle_time"`
+	Timeout         time.Duration `env-default:"5s"           yaml:"timeout"`
+	MigrationsPath  string        `env-default:"./migrations" yaml:"migrations_path"`
 }
 
 const (
@@ -57,6 +57,7 @@ func MustLoad() *Config {
 	if err != nil {
 		panic(fmt.Sprintf("failed to load config: %v", err))
 	}
+
 	return cfg
 }
 

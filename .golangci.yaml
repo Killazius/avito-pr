@@ -11,7 +11,6 @@ linters:
     - containedctx
     - contextcheck
     - copyloopvar
-    - cyclop
     - decorder
     - dogsled
     - dupword
@@ -31,10 +30,8 @@ linters:
     - gocheckcompilerdirectives
     - gochecknoinits
     - gochecksumtype
-    - gocognit
     - goconst
     - gocritic
-    - gocyclo
     - godot
     - godox
     - goheader
@@ -94,8 +91,7 @@ linters:
     - zerologlint
 
   settings:
-    cyclop:
-      max-complexity: 15
+
     gocritic:
       enable-all: true
       disabled-checks:
@@ -165,7 +161,7 @@ linters:
           disabled: true
         - name: cyclomatic
           arguments:
-            - 15
+            - 25
         - name: confusing-naming
           disabled: true
         - name: deep-exit

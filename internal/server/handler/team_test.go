@@ -14,10 +14,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
 
 func TestTeamHandler_CreateTeam(t *testing.T) {
+	t.Parallel()
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
@@ -50,9 +52,10 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 			},
 			expectedStatus: http.StatusCreated,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response map[string]interface{}
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Contains(t, response, "team")
 				team, ok := response["team"].(map[string]interface{})
 				assert.True(t, ok, "team should be a map")
@@ -70,12 +73,13 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 					{UserID: "u1", Username: "Alice", IsActive: true},
 				},
 			},
-			mockSetup:      func(m *mocks.MockTeamService) {},
+			mockSetup:      func(_ *mocks.MockTeamService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorBadRequest, response.Error.Code)
 				assert.Equal(t, "Invalid request payload", response.Error.Message)
 			},
@@ -85,12 +89,13 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 			requestBody: map[string]interface{}{
 				"team_name": "backend",
 			},
-			mockSetup:      func(m *mocks.MockTeamService) {},
+			mockSetup:      func(_ *mocks.MockTeamService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorBadRequest, response.Error.Code)
 				assert.Equal(t, "Invalid request payload", response.Error.Message)
 			},
@@ -110,9 +115,10 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 			},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorTeamExists, response.Error.Code)
 				assert.Equal(t, "team_name already exists", response.Error.Message)
 			},
@@ -132,9 +138,10 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorInternal, response.Error.Code)
 				assert.Equal(t, "Internal server error", response.Error.Message)
 			},
@@ -142,12 +149,13 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 		{
 			name:           "invalid json",
 			requestBody:    "invalid json",
-			mockSetup:      func(m *mocks.MockTeamService) {},
+			mockSetup:      func(_ *mocks.MockTeamService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorBadRequest, response.Error.Code)
 				assert.Equal(t, "Invalid request payload", response.Error.Message)
 			},
@@ -156,6 +164,7 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockService := new(mocks.MockTeamService)
 			tt.mockSetup(mockService)
 
@@ -175,7 +184,7 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 				body = []byte(str)
 			} else {
 				body, err = json.Marshal(tt.requestBody)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 
 			req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewBuffer(body))
@@ -193,6 +202,7 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 }
 
 func TestTeamHandler_GetTeam(t *testing.T) {
+	t.Parallel()
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
@@ -216,9 +226,10 @@ func TestTeamHandler_GetTeam(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var team models.Team
 				err := json.Unmarshal(rec.Body.Bytes(), &team)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, "backend", team.TeamName)
 				assert.Len(t, team.Members, 2)
 				assert.Equal(t, "u1", team.Members[0].UserID)
@@ -232,12 +243,13 @@ func TestTeamHandler_GetTeam(t *testing.T) {
 		{
 			name:           "missing team_name parameter",
 			queryParams:    "",
-			mockSetup:      func(m *mocks.MockTeamService) {},
+			mockSetup:      func(_ *mocks.MockTeamService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorBadRequest, response.Error.Code)
 				assert.Equal(t, "Invalid request payload", response.Error.Message)
 			},
@@ -250,9 +262,10 @@ func TestTeamHandler_GetTeam(t *testing.T) {
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorNotFound, response.Error.Code)
 				assert.Equal(t, "resource not found", response.Error.Message)
 			},
@@ -265,9 +278,10 @@ func TestTeamHandler_GetTeam(t *testing.T) {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorInternal, response.Error.Code)
 				assert.Equal(t, "Internal server error", response.Error.Message)
 			},
@@ -276,6 +290,7 @@ func TestTeamHandler_GetTeam(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockService := new(mocks.MockTeamService)
 			tt.mockSetup(mockService)
 
@@ -308,6 +323,7 @@ func TestTeamHandler_GetTeam(t *testing.T) {
 }
 
 func TestNewTeamHandler(t *testing.T) {
+	t.Parallel()
 	mockService := new(mocks.MockTeamService)
 	handler := NewTeamHandler(mockService)
 

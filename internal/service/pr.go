@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"time"
 
 	"github.com/Killazius/avito-pr/internal/models"
@@ -19,18 +20,18 @@ type PRService struct {
 	prRepo    PRRepository
 }
 
-func NewPRService(TeamRepository TeamRepository, UserRepository UserRepository, PRRepository PRRepository, trManager *manager.Manager) *PRService {
+func NewPRService(teamRepository TeamRepository, userRepository UserRepository, pRRepository PRRepository, trManager *manager.Manager) *PRService {
 	return &PRService{
 		trManager: trManager,
-		teamRepo:  TeamRepository,
-		userRepo:  UserRepository,
-		prRepo:    PRRepository,
+		teamRepo:  teamRepository,
+		userRepo:  userRepository,
+		prRepo:    pRRepository,
 	}
 }
 
-func (s *PRService) CreatePR(ctx context.Context, prID string, prName string, authorID string) (*models.PullRequest, error) {
+func (s *PRService) CreatePR(ctx context.Context, prID, prName, authorID string) (*models.PullRequest, error) {
 	if prID == "" || prName == "" || authorID == "" {
-		return nil, fmt.Errorf("prID, prName and authorID are required")
+		return nil, errors.New("prID, prName and authorID are required")
 	}
 	err := s.trManager.Do(ctx, func(ctx context.Context) error {
 		exists, err := s.prRepo.PRExists(ctx, prID)
@@ -45,6 +46,7 @@ func (s *PRService) CreatePR(ctx context.Context, prID string, prName string, au
 			if errors.Is(err, postgres.ErrUserNotFound) {
 				return ErrUserNotFound
 			}
+
 			return fmt.Errorf("failed to get author: %w", err)
 		}
 		if user == nil {
@@ -79,6 +81,7 @@ func (s *PRService) CreatePR(ctx context.Context, prID string, prName string, au
 				return fmt.Errorf("failed to assign reviewer %s: %w", reviewerID, err)
 			}
 		}
+
 		return nil
 	})
 	if err != nil {
@@ -89,14 +92,16 @@ func (s *PRService) CreatePR(ctx context.Context, prID string, prName string, au
 		if errors.Is(err, postgres.ErrPRNotFound) {
 			return nil, ErrPRNotFound
 		}
+
 		return nil, fmt.Errorf("failed to get PR: %w", err)
 	}
+
 	return pr, nil
 }
 
 func (s *PRService) MergePR(ctx context.Context, prID string) (*models.PullRequest, error) {
 	if prID == "" {
-		return nil, fmt.Errorf("prID is required")
+		return nil, errors.New("prID is required")
 	}
 	err := s.trManager.Do(ctx, func(ctx context.Context) error {
 		pr, err := s.prRepo.GetPRByID(ctx, prID)
@@ -104,6 +109,7 @@ func (s *PRService) MergePR(ctx context.Context, prID string) (*models.PullReque
 			if errors.Is(err, postgres.ErrPRNotFound) {
 				return ErrPRNotFound
 			}
+
 			return fmt.Errorf("failed to get PR: %w", err)
 		}
 		if pr == nil {
@@ -116,6 +122,7 @@ func (s *PRService) MergePR(ctx context.Context, prID string) (*models.PullReque
 		if err != nil {
 			return fmt.Errorf("failed to mark PR as merged: %w", err)
 		}
+
 		return nil
 	})
 	if err != nil {
@@ -126,12 +133,13 @@ func (s *PRService) MergePR(ctx context.Context, prID string) (*models.PullReque
 	if err != nil {
 		return nil, fmt.Errorf("failed to get PR after merge: %w", err)
 	}
+
 	return pr, nil
 }
 
 func (s *PRService) ReassignReviewer(ctx context.Context, pullRequestID, oldUserID string) (*models.PullRequest, string, error) {
 	if pullRequestID == "" || oldUserID == "" {
-		return nil, "", fmt.Errorf("pullRequestID and oldUserID are required")
+		return nil, "", errors.New("pullRequestID and oldUserID are required")
 	}
 	var newReviewerID string
 	var resultPR *models.PullRequest
@@ -151,6 +159,7 @@ func (s *PRService) ReassignReviewer(ctx context.Context, pullRequestID, oldUser
 		for _, reviewer := range pr.AssignedReviewers {
 			if reviewer == oldUserID {
 				isAssigned = true
+
 				break
 			}
 		}
@@ -163,6 +172,7 @@ func (s *PRService) ReassignReviewer(ctx context.Context, pullRequestID, oldUser
 			if errors.Is(err, postgres.ErrUserNotFound) {
 				return ErrUserNotFound
 			}
+
 			return fmt.Errorf("failed to get PR author: %w", err)
 		}
 		candidates, err := s.userRepo.GetActiveTeamMembers(ctx, author.TeamName, oldUserID, author.UserID)
@@ -179,6 +189,7 @@ func (s *PRService) ReassignReviewer(ctx context.Context, pullRequestID, oldUser
 			for _, reviewer := range pr.AssignedReviewers {
 				if candidate.UserID == reviewer {
 					isAlreadyReviewer = true
+
 					break
 				}
 			}
@@ -190,8 +201,12 @@ func (s *PRService) ReassignReviewer(ctx context.Context, pullRequestID, oldUser
 		if len(availableCandidates) == 0 {
 			return ErrNoCandidate
 		}
-		rand.New(rand.NewSource(time.Now().UnixNano()))
-		selectedIndex := rand.Intn(len(availableCandidates))
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(availableCandidates))))
+		if err != nil {
+			return fmt.Errorf("failed to generate random index: %w", err)
+		}
+
+		selectedIndex := int(n.Int64())
 		newReviewerID = availableCandidates[selectedIndex].UserID
 
 		if err = s.prRepo.RemoveReviewer(ctx, pullRequestID, oldUserID); err != nil {
@@ -226,10 +241,14 @@ func (s *PRService) autoAssignReviewers(ctx context.Context, author *models.User
 	if len(candidates) == 0 {
 		return nil, ErrNoReviewers
 	}
-	rand.New(rand.NewSource(time.Now().UnixNano()))
-	rand.Shuffle(len(candidates), func(i, j int) {
+	for i := len(candidates) - 1; i > 0; i-- {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(i+1)))
+		if err != nil {
+			return nil, err
+		}
+		j := int(n.Int64())
 		candidates[i], candidates[j] = candidates[j], candidates[i]
-	})
+	}
 
 	maxReviewers := min(2, len(candidates))
 	reviewerIDs := make([]string, 0, maxReviewers)

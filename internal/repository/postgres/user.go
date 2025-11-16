@@ -59,6 +59,7 @@ func (r *Repository) GetUserByID(ctx context.Context, userID string) (*models.Us
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrUserNotFound
 		}
+
 		return nil, fmt.Errorf("failed to get user by ID: %w", err)
 	}
 
@@ -97,8 +98,7 @@ func (r *Repository) GetActiveTeamMembers(ctx context.Context, teamID, authorID 
 	}
 	defer rows.Close()
 
-	var users []*models.User
-
+	users := make([]*models.User, 0)
 	for rows.Next() {
 		var user models.User
 
@@ -136,7 +136,7 @@ func (r *Repository) GetUserReviews(ctx context.Context, userID string) ([]*mode
 	}
 	defer rows.Close()
 
-	var pullRequests []*models.PullRequestShort
+	pullRequests := make([]*models.PullRequestShort, 0)
 
 	for rows.Next() {
 		var pr models.PullRequestShort

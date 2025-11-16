@@ -15,6 +15,7 @@ import (
 )
 
 func TestStatsHandler_GetStats(t *testing.T) {
+	t.Parallel()
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
@@ -67,6 +68,7 @@ func TestStatsHandler_GetStats(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockService := new(mocks.MockStatsService)
 			tt.mockSetup(mockService)
 
@@ -94,6 +96,7 @@ func TestStatsHandler_GetStats(t *testing.T) {
 }
 
 func TestNewStatsHandler(t *testing.T) {
+	t.Parallel()
 	mockService := new(mocks.MockStatsService)
 	handler := NewStatsHandler(mockService)
 
@@ -102,6 +105,7 @@ func TestNewStatsHandler(t *testing.T) {
 }
 
 func TestStatsHandler_RegisterRoutes(t *testing.T) {
+	t.Parallel()
 	gin.SetMode(gin.TestMode)
 	mockService := new(mocks.MockStatsService)
 	handler := NewStatsHandler(mockService)

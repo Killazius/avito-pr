@@ -34,7 +34,7 @@ func (h *UserHandler) RegisterRoutes(r gin.IRouter) {
 }
 
 type SetUserStatusRequest struct {
-	UserID   string `json:"user_id" binding:"required"`
+	UserID   string `binding:"required" json:"user_id"`
 	IsActive bool   `json:"is_active"`
 }
 
@@ -52,6 +52,7 @@ func (h *UserHandler) SetUserStatus(c *gin.Context) {
 				Message: "Invalid request payload",
 			},
 		})
+
 		return
 	}
 
@@ -70,6 +71,7 @@ func (h *UserHandler) SetUserStatus(c *gin.Context) {
 					Code:    models.ErrorNotFound,
 					Message: "resource not found",
 				}})
+
 			return
 		}
 		log.Error("internal server error while updating user status",
@@ -80,6 +82,7 @@ func (h *UserHandler) SetUserStatus(c *gin.Context) {
 				Code:    models.ErrorInternal,
 				Message: "Internal server error",
 			}})
+
 		return
 	}
 
@@ -90,7 +93,7 @@ func (h *UserHandler) SetUserStatus(c *gin.Context) {
 }
 
 type GetReviewsRequest struct {
-	UserID string `form:"user_id" binding:"required"`
+	UserID string `binding:"required" form:"user_id"`
 }
 
 func (h *UserHandler) GetReview(c *gin.Context) {
@@ -106,6 +109,7 @@ func (h *UserHandler) GetReview(c *gin.Context) {
 				Message: "Invalid request payload",
 			},
 		})
+
 		return
 	}
 
@@ -123,6 +127,7 @@ func (h *UserHandler) GetReview(c *gin.Context) {
 					Code:    models.ErrorNotFound,
 					Message: "resource not found",
 				}})
+
 			return
 		}
 		log.Error("internal server error while getting user reviews",
@@ -133,6 +138,7 @@ func (h *UserHandler) GetReview(c *gin.Context) {
 				Code:    models.ErrorInternal,
 				Message: "Internal server error",
 			}})
+
 		return
 	}
 

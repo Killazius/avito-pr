@@ -25,6 +25,7 @@ func (r *Repository) CreatePR(ctx context.Context, pr *models.PullRequest) error
 	if err != nil {
 		return fmt.Errorf("failed to create PR: %w", err)
 	}
+
 	return nil
 }
 
@@ -66,6 +67,7 @@ func (r *Repository) GetPRByID(ctx context.Context, prID string) (*models.PullRe
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrPRNotFound
 		}
+
 		return nil, fmt.Errorf("failed to get PR: %w", err)
 	}
 
@@ -90,6 +92,7 @@ func (r *Repository) AssignReviewer(ctx context.Context, prID, userID string) er
 	if err != nil {
 		return fmt.Errorf("failed to assign reviewer: %w", err)
 	}
+
 	return nil
 }
 
@@ -104,8 +107,7 @@ func (r *Repository) GetPRReviewers(ctx context.Context, prID string) ([]string,
 	}
 	defer rows.Close()
 
-	var reviewers []string
-
+	reviewers := make([]string, 0)
 	for rows.Next() {
 		var userID string
 		if err := rows.Scan(&userID); err != nil {
@@ -132,7 +134,7 @@ func (r *Repository) MarkPRAsMerged(ctx context.Context, prID string, status mod
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
-		return fmt.Errorf("PR already merged")
+		return errors.New("PR already merged")
 	}
 
 	return nil
@@ -149,7 +151,7 @@ func (r *Repository) RemoveReviewer(ctx context.Context, prID, userID string) er
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
-		return fmt.Errorf("reviewer not found for this PR")
+		return errors.New("reviewer not found for this PR")
 	}
 
 	return nil

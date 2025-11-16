@@ -16,6 +16,7 @@ func (r *Repository) GetTeamsCount(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	return count, nil
 }
 
@@ -75,5 +76,6 @@ func (r *Repository) GetAssignmentsCount(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	return count, nil
 }

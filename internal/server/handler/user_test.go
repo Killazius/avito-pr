@@ -14,10 +14,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
 
 func TestUserHandler_SetUserStatus(t *testing.T) {
+	t.Parallel()
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
@@ -43,9 +45,10 @@ func TestUserHandler_SetUserStatus(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response map[string]interface{}
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Contains(t, response, "user")
 				user, ok := response["user"].(map[string]interface{})
 				assert.True(t, ok)
@@ -71,9 +74,10 @@ func TestUserHandler_SetUserStatus(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response map[string]interface{}
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Contains(t, response, "user")
 				user, ok := response["user"].(map[string]interface{})
 				assert.True(t, ok)
@@ -86,12 +90,13 @@ func TestUserHandler_SetUserStatus(t *testing.T) {
 			requestBody: map[string]interface{}{
 				"is_active": true,
 			},
-			mockSetup:      func(m *mocks.MockUserService) {},
+			mockSetup:      func(_ *mocks.MockUserService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorBadRequest, response.Error.Code)
 				assert.Equal(t, "Invalid request payload", response.Error.Message)
 			},
@@ -107,9 +112,10 @@ func TestUserHandler_SetUserStatus(t *testing.T) {
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorNotFound, response.Error.Code)
 				assert.Equal(t, "resource not found", response.Error.Message)
 			},
@@ -125,9 +131,10 @@ func TestUserHandler_SetUserStatus(t *testing.T) {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorInternal, response.Error.Code)
 				assert.Equal(t, "Internal server error", response.Error.Message)
 			},
@@ -135,12 +142,13 @@ func TestUserHandler_SetUserStatus(t *testing.T) {
 		{
 			name:           "invalid json",
 			requestBody:    "invalid json",
-			mockSetup:      func(m *mocks.MockUserService) {},
+			mockSetup:      func(_ *mocks.MockUserService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorBadRequest, response.Error.Code)
 				assert.Equal(t, "Invalid request payload", response.Error.Message)
 			},
@@ -149,6 +157,7 @@ func TestUserHandler_SetUserStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockService := new(mocks.MockUserService)
 			tt.mockSetup(mockService)
 
@@ -168,7 +177,7 @@ func TestUserHandler_SetUserStatus(t *testing.T) {
 				body = []byte(str)
 			} else {
 				body, err = json.Marshal(tt.requestBody)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 
 			req := httptest.NewRequest(http.MethodPost, "/users/setIsActive", bytes.NewBuffer(body))
@@ -186,6 +195,7 @@ func TestUserHandler_SetUserStatus(t *testing.T) {
 }
 
 func TestUserHandler_GetReview(t *testing.T) {
+	t.Parallel()
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
@@ -216,9 +226,10 @@ func TestUserHandler_GetReview(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response map[string]interface{}
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, "u2", response["user_id"])
 				assert.Contains(t, response, "pull_requests")
 				prs, ok := response["pull_requests"].([]interface{})
@@ -248,25 +259,27 @@ func TestUserHandler_GetReview(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response map[string]interface{}
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, "u3", response["user_id"])
 				assert.Contains(t, response, "pull_requests")
 				prs, ok := response["pull_requests"].([]interface{})
 				assert.True(t, ok)
-				assert.Len(t, prs, 0)
+				assert.Empty(t, prs)
 			},
 		},
 		{
 			name:           "missing user_id parameter",
 			queryParams:    "",
-			mockSetup:      func(m *mocks.MockUserService) {},
+			mockSetup:      func(_ *mocks.MockUserService) {},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorBadRequest, response.Error.Code)
 				assert.Equal(t, "Invalid request payload", response.Error.Message)
 			},
@@ -279,9 +292,10 @@ func TestUserHandler_GetReview(t *testing.T) {
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorNotFound, response.Error.Code)
 				assert.Equal(t, "resource not found", response.Error.Message)
 			},
@@ -294,9 +308,10 @@ func TestUserHandler_GetReview(t *testing.T) {
 			},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
+				t.Helper()
 				var response models.ErrorResponse
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, models.ErrorInternal, response.Error.Code)
 				assert.Equal(t, "Internal server error", response.Error.Message)
 			},
@@ -305,6 +320,7 @@ func TestUserHandler_GetReview(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockService := new(mocks.MockUserService)
 			tt.mockSetup(mockService)
 
@@ -337,6 +353,7 @@ func TestUserHandler_GetReview(t *testing.T) {
 }
 
 func TestNewUserHandler(t *testing.T) {
+	t.Parallel()
 	mockService := new(mocks.MockUserService)
 	handler := NewHandler(mockService)
 

@@ -26,10 +26,10 @@ func NewTeamService(teamRepo TeamRepository, userRepo UserRepository, trManager 
 
 func (s *TeamService) CreateTeamWithMembers(ctx context.Context, teamName string, members []models.TeamMember) (*models.Team, error) {
 	if teamName == "" {
-		return nil, fmt.Errorf("team name cannot be empty")
+		return nil, errors.New("team name cannot be empty")
 	}
 	if len(members) == 0 {
-		return nil, fmt.Errorf("team must have at least one member")
+		return nil, errors.New("team must have at least one member")
 	}
 
 	err := s.trManager.Do(ctx, func(ctx context.Context) error {
@@ -66,14 +66,16 @@ func (s *TeamService) CreateTeamWithMembers(ctx context.Context, teamName string
 
 func (s *TeamService) GetTeam(ctx context.Context, teamName string) (*models.Team, error) {
 	if teamName == "" {
-		return nil, fmt.Errorf("team name cannot be empty")
+		return nil, errors.New("team name cannot be empty")
 	}
 	team, err := s.teamRepo.GetTeamWithMembers(ctx, teamName)
 	if err != nil {
 		if errors.Is(err, postgres.ErrTeamNotFound) {
 			return nil, ErrTeamNotFound
 		}
+
 		return nil, fmt.Errorf("failed to get team with members: %w", err)
 	}
+
 	return team, nil
 }

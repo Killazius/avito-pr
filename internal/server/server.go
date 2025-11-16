@@ -27,6 +27,7 @@ func New(
 	handlers ...Handler,
 ) *Server {
 	router := registerRoutes(log, handlers...)
+
 	return &Server{
 		server: &http.Server{
 			Addr:         cfg.GetAddr(),
@@ -49,6 +50,7 @@ func registerRoutes(log *zap.Logger, handlers ...Handler) *gin.Engine {
 	for _, handler := range handlers {
 		handler.RegisterRoutes(r)
 	}
+
 	return r
 }
 
@@ -66,6 +68,7 @@ func (s *Server) Run() error {
 	if errors.Is(err, http.ErrServerClosed) {
 		return nil
 	}
+
 	return err
 }
 func (s *Server) Close() error {
@@ -78,7 +81,9 @@ func (s *Server) Close() error {
 		if closeErr := s.server.Close(); closeErr != nil {
 			return fmt.Errorf("shutdown error: %w, close error: %w", err, closeErr)
 		}
+
 		return err
 	}
+
 	return nil
 }

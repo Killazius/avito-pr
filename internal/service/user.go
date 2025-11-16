@@ -24,7 +24,7 @@ func NewUserService(userRepo UserRepository, trManager *manager.Manager) *UserSe
 
 func (s *UserService) UpdateUserStatus(ctx context.Context, userID string, isActive bool) (*models.User, error) {
 	if userID == "" {
-		return nil, fmt.Errorf("user ID cannot be empty")
+		return nil, errors.New("user ID cannot be empty")
 	}
 	err := s.trManager.Do(ctx, func(ctx context.Context) error {
 		err := s.userRepo.UpdateIsActiveStatus(ctx, userID, isActive)
@@ -32,6 +32,7 @@ func (s *UserService) UpdateUserStatus(ctx context.Context, userID string, isAct
 			if errors.Is(err, postgres.ErrUserNotFound) {
 				return ErrUserNotFound
 			}
+
 			return fmt.Errorf("failed to update user status: %w", err)
 		}
 
@@ -44,12 +45,13 @@ func (s *UserService) UpdateUserStatus(ctx context.Context, userID string, isAct
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user by ID: %w", err)
 	}
+
 	return user, nil
 }
 
 func (s *UserService) GetUserReviews(ctx context.Context, userID string) ([]*models.PullRequestShort, error) {
 	if userID == "" {
-		return nil, fmt.Errorf("userID cannot be empty")
+		return nil, errors.New("user ID cannot be empty")
 	}
 
 	user, err := s.userRepo.GetUserByID(ctx, userID)
@@ -57,6 +59,7 @@ func (s *UserService) GetUserReviews(ctx context.Context, userID string) ([]*mod
 		if errors.Is(err, postgres.ErrUserNotFound) {
 			return nil, ErrUserNotFound
 		}
+
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
@@ -72,5 +75,6 @@ func (s *UserService) GetUserReviews(ctx context.Context, userID string) ([]*mod
 	if pullRequests == nil {
 		pullRequests = []*models.PullRequestShort{}
 	}
+
 	return pullRequests, nil
 }

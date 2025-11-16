@@ -28,8 +28,8 @@ func NewTeamHandler(s TeamService) *TeamHandler {
 }
 
 type CreateTeamRequest struct {
-	TeamName string              `json:"team_name" binding:"required"`
-	Members  []models.TeamMember `json:"members" binding:"required"`
+	TeamName string              `binding:"required" json:"team_name"`
+	Members  []models.TeamMember `binding:"required" json:"members"`
 }
 
 func (h *TeamHandler) RegisterRoutes(r gin.IRouter) {
@@ -52,6 +52,7 @@ func (h *TeamHandler) CreateTeam(c *gin.Context) {
 				Message: "Invalid request payload",
 			},
 		})
+
 		return
 	}
 
@@ -69,6 +70,7 @@ func (h *TeamHandler) CreateTeam(c *gin.Context) {
 					Code:    models.ErrorTeamExists,
 					Message: "team_name already exists",
 				}})
+
 			return
 		}
 		log.Error("internal server error while creating team",
@@ -79,6 +81,7 @@ func (h *TeamHandler) CreateTeam(c *gin.Context) {
 				Code:    models.ErrorInternal,
 				Message: "Internal server error",
 			}})
+
 		return
 	}
 
@@ -88,7 +91,7 @@ func (h *TeamHandler) CreateTeam(c *gin.Context) {
 }
 
 type GetTeamRequest struct {
-	TeamName string `form:"team_name" binding:"required"`
+	TeamName string `binding:"required" form:"team_name"`
 }
 
 func (h *TeamHandler) GetTeam(c *gin.Context) {
@@ -104,6 +107,7 @@ func (h *TeamHandler) GetTeam(c *gin.Context) {
 				Message: "Invalid request payload",
 			},
 		})
+
 		return
 	}
 
@@ -121,6 +125,7 @@ func (h *TeamHandler) GetTeam(c *gin.Context) {
 					Code:    models.ErrorNotFound,
 					Message: "resource not found",
 				}})
+
 			return
 		}
 		log.Error("internal server error while getting team",
@@ -131,6 +136,7 @@ func (h *TeamHandler) GetTeam(c *gin.Context) {
 				Code:    models.ErrorInternal,
 				Message: "Internal server error",
 			}})
+
 		return
 	}
 

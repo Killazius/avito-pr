@@ -25,8 +25,10 @@ func GetLoggerFromContext(ctx *gin.Context) *zap.Logger {
 		if !ok {
 			return zap.L().With(zap.String("error", "invalid_logger_type"))
 		}
+
 		return zapLogger
 	}
+
 	return zap.L().With(zap.String("error", "logger_not_found_in_context"))
 }
 

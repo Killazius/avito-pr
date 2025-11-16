@@ -54,8 +54,8 @@ type PullRequest struct {
 	AuthorID          string     `json:"author_id"`
 	Status            string     `json:"status"` // OPEN, MERGED
 	AssignedReviewers []string   `json:"assigned_reviewers"`
-	CreatedAt         *time.Time `json:"createdAt,omitempty"`
-	MergedAt          *time.Time `json:"mergedAt,omitempty"`
+	CreatedAt         *time.Time `json:"created_at,omitempty"`
+	MergedAt          *time.Time `json:"merged_at,omitempty"`
 }
 
 type PullRequestShort struct {
