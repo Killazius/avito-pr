@@ -121,6 +121,7 @@ func (s *PRService) MergePR(ctx context.Context, prID string) (*models.PullReque
 	if err != nil {
 		return nil, err
 	}
+
 	pr, err := s.prRepo.GetPRByID(ctx, prID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get PR after merge: %w", err)
@@ -145,6 +146,7 @@ func (s *PRService) ReassignReviewer(ctx context.Context, pullRequestID, oldUser
 		if pr.Status == models.PRStatusMerged {
 			return ErrPRMerged
 		}
+
 		isAssigned := false
 		for _, reviewer := range pr.AssignedReviewers {
 			if reviewer == oldUserID {
@@ -167,6 +169,7 @@ func (s *PRService) ReassignReviewer(ctx context.Context, pullRequestID, oldUser
 		if err != nil {
 			return fmt.Errorf("failed to get team members: %w", err)
 		}
+
 		if len(candidates) == 0 {
 			return ErrNoReviewers
 		}
@@ -179,6 +182,7 @@ func (s *PRService) ReassignReviewer(ctx context.Context, pullRequestID, oldUser
 					break
 				}
 			}
+
 			if !isAlreadyReviewer {
 				availableCandidates = append(availableCandidates, candidate)
 			}
@@ -189,17 +193,21 @@ func (s *PRService) ReassignReviewer(ctx context.Context, pullRequestID, oldUser
 		rand.New(rand.NewSource(time.Now().UnixNano()))
 		selectedIndex := rand.Intn(len(availableCandidates))
 		newReviewerID = availableCandidates[selectedIndex].UserID
+
 		if err = s.prRepo.RemoveReviewer(ctx, pullRequestID, oldUserID); err != nil {
 			return fmt.Errorf("failed to remove old reviewer: %w", err)
 		}
+
 		if err = s.prRepo.AssignReviewer(ctx, pullRequestID, newReviewerID); err != nil {
 			return fmt.Errorf("failed to assign new reviewer: %w", err)
 		}
+
 		updatedPR, err := s.prRepo.GetPRByID(ctx, pullRequestID)
 		if err != nil {
 			return fmt.Errorf("failed to get updated PR: %w", err)
 		}
 		resultPR = updatedPR
+
 		return nil
 	})
 	if err != nil {

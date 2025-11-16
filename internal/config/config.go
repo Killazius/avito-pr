@@ -66,19 +66,24 @@ func load() (*Config, error) {
 			return nil, fmt.Errorf("failed to load .env: %w", loadErr)
 		}
 	}
+
 	configPath := getConfigPath()
 	if configPath != "" {
 		fileInfo, err := os.Stat(configPath)
+
 		if os.IsNotExist(err) {
 			return nil, fmt.Errorf("config file %s does not exist", configPath)
 		}
+
 		if err != nil {
 			return nil, fmt.Errorf("failed to access config file: %w", err)
 		}
+
 		if fileInfo.IsDir() {
 			return nil, fmt.Errorf("config path is a directory, not a file: %s", configPath)
 		}
 	}
+
 	var cfg Config
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
 		return nil, fmt.Errorf("failed to read env vars: %w", err)
@@ -92,6 +97,7 @@ func getConfigPath() string {
 	if configPath == "" {
 		configPath = defaultConfigPath
 	}
+
 	return configPath
 }
 

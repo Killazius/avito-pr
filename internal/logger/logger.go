@@ -13,6 +13,7 @@ func MustLoad(path string) *zap.Logger {
 	if err != nil {
 		panic(fmt.Sprintf("logger load error: %s", err))
 	}
+
 	return log
 }
 
@@ -22,8 +23,10 @@ func load(path string) (*zap.Logger, error) {
 		if logErr != nil {
 			return nil, fmt.Errorf("failed to create default logger: %w", logErr)
 		}
+
 		log.Warn("using default logger because config file not found",
 			zap.String("path", path))
+
 		return log, nil
 	}
 
@@ -41,9 +44,11 @@ func load(path string) (*zap.Logger, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to build logger from config %q: %w", path, err)
 	}
+
 	level := getLevel()
 	logger = logger.WithOptions(zap.IncreaseLevel(level))
 	zap.ReplaceGlobals(logger)
+
 	return logger, nil
 }
 
@@ -52,5 +57,6 @@ func getLevel() zap.AtomicLevel {
 	if mode == "release" {
 		return zap.NewAtomicLevelAt(zap.InfoLevel)
 	}
+
 	return zap.NewAtomicLevelAt(zap.DebugLevel)
 }

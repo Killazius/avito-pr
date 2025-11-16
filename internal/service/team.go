@@ -57,7 +57,6 @@ func (s *TeamService) CreateTeamWithMembers(ctx context.Context, teamName string
 
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}

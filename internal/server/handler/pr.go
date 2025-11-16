@@ -53,8 +53,8 @@ func (h *PRHandler) Create(c *gin.Context) {
 			Error: models.ErrorBody{
 				Code:    models.ErrorBadRequest,
 				Message: "Invalid request payload",
-			}})
-
+			},
+		})
 		return
 	}
 	log.Info("creating PR",
@@ -135,8 +135,8 @@ func (h *PRHandler) Merge(c *gin.Context) {
 			Error: models.ErrorBody{
 				Code:    models.ErrorBadRequest,
 				Message: "Invalid request payload",
-			}})
-
+			},
+		})
 		return
 	}
 
@@ -190,8 +190,8 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 			Error: models.ErrorBody{
 				Code:    models.ErrorBadRequest,
 				Message: "Invalid request payload",
-			}})
-
+			},
+		})
 		return
 	}
 

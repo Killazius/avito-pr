@@ -27,7 +27,9 @@ func (r *Repository) GetUsersStats(ctx context.Context) (*models.UsersStats, err
 			COUNT(CASE WHEN is_active = true THEN 1 END) as active_users
 		FROM users
 	`
+
 	var totalUsers, activeUsers int
+
 	err := conn.QueryRow(ctx, query).Scan(&totalUsers, &activeUsers)
 	if err != nil {
 		return nil, err
@@ -48,7 +50,9 @@ func (r *Repository) GetPRStats(ctx context.Context) (*models.PRStats, error) {
 			COUNT(CASE WHEN status = 'MERGED' THEN 1 END) as merged_prs
 		FROM pull_requests
 	`
+
 	var totalPRs, openPRs, mergedPRs int
+
 	err := conn.QueryRow(ctx, query).Scan(&totalPRs, &openPRs, &mergedPRs)
 	if err != nil {
 		return nil, err
@@ -64,7 +68,9 @@ func (r *Repository) GetPRStats(ctx context.Context) (*models.PRStats, error) {
 func (r *Repository) GetAssignmentsCount(ctx context.Context) (int, error) {
 	conn := r.getConn(ctx)
 	query := `SELECT COUNT(*) FROM pr_reviewers`
+
 	var count int
+
 	err := conn.QueryRow(ctx, query).Scan(&count)
 	if err != nil {
 		return 0, err

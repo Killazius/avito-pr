@@ -50,7 +50,8 @@ func (h *UserHandler) SetUserStatus(c *gin.Context) {
 			Error: models.ErrorBody{
 				Code:    models.ErrorBadRequest,
 				Message: "Invalid request payload",
-			}})
+			},
+		})
 		return
 	}
 
@@ -103,7 +104,8 @@ func (h *UserHandler) GetReview(c *gin.Context) {
 			Error: models.ErrorBody{
 				Code:    models.ErrorBadRequest,
 				Message: "Invalid request payload",
-			}})
+			},
+		})
 		return
 	}
 

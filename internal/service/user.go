@@ -45,8 +45,8 @@ func (s *UserService) UpdateUserStatus(ctx context.Context, userID string, isAct
 		return nil, fmt.Errorf("failed to get user by ID: %w", err)
 	}
 	return user, nil
-
 }
+
 func (s *UserService) GetUserReviews(ctx context.Context, userID string) ([]*models.PullRequestShort, error) {
 	if userID == "" {
 		return nil, fmt.Errorf("userID cannot be empty")

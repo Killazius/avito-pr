@@ -29,11 +29,12 @@ func CreatePool(cfg config.PostgresConfig) (*pgxpool.Pool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse connection string: %w", err)
 	}
-	port, err := strconv.ParseUint(cfg.Port, 10, 16)
 
+	port, err := strconv.ParseUint(cfg.Port, 10, 16)
 	if err != nil {
 		return nil, fmt.Errorf("invalid port %s: %w", cfg.Port, err)
 	}
+
 	poolConfig.ConnConfig.Host = cfg.Host
 	poolConfig.ConnConfig.Port = uint16(port)
 	poolConfig.ConnConfig.Database = cfg.Database

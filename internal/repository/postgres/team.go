@@ -11,6 +11,7 @@ func (r *Repository) CreateTeam(ctx context.Context, teamName string) error {
 	query := `INSERT INTO teams (name, created_at) VALUES ($1, NOW())`
 
 	conn := r.getConn(ctx)
+
 	_, err := conn.Exec(ctx, query, teamName)
 	if err != nil {
 		return fmt.Errorf("failed to create team: %w", err)
@@ -22,7 +23,9 @@ func (r *Repository) TeamExists(ctx context.Context, name string) (bool, error) 
 	query := `SELECT EXISTS(SELECT 1 FROM teams WHERE name = $1)`
 
 	conn := r.getConn(ctx)
+
 	var exists bool
+
 	err := conn.QueryRow(ctx, query, name).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf("failed to check team existence: %w", err)
@@ -38,6 +41,7 @@ func (r *Repository) GetTeamWithMembers(ctx context.Context, name string) (*mode
 	if err != nil {
 		return nil, fmt.Errorf("failed to check team existence: %w", err)
 	}
+
 	if !exists {
 		return nil, ErrTeamNotFound
 	}
@@ -53,11 +57,13 @@ func (r *Repository) GetTeamWithMembers(ctx context.Context, name string) (*mode
 	defer rows.Close()
 
 	var members []models.TeamMember
+
 	for rows.Next() {
 		var member models.TeamMember
 		if err := rows.Scan(&member.UserID, &member.Username, &member.IsActive); err != nil {
 			return nil, fmt.Errorf("failed to scan team member: %w", err)
 		}
+
 		members = append(members, member)
 	}
 

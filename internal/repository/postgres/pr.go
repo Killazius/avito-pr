@@ -16,6 +16,7 @@ func (r *Repository) CreatePR(ctx context.Context, pr *models.PullRequest) error
         VALUES ($1, $2, $3, $4)`
 
 	conn := r.getConn(ctx)
+
 	_, err := conn.Exec(ctx, query,
 		pr.PullRequestID,
 		pr.PullRequestName,
@@ -31,7 +32,9 @@ func (r *Repository) PRExists(ctx context.Context, prID string) (bool, error) {
 	query := `SELECT EXISTS(SELECT 1 FROM pull_requests WHERE id = $1)`
 
 	conn := r.getConn(ctx)
+
 	var exists bool
+
 	err := conn.QueryRow(ctx, query, prID).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf("failed to check PR existence: %w", err)
@@ -47,7 +50,9 @@ func (r *Repository) GetPRByID(ctx context.Context, prID string) (*models.PullRe
         WHERE id = $1`
 
 	conn := r.getConn(ctx)
+
 	var pr models.PullRequest
+
 	var mergedAt *time.Time
 
 	err := conn.QueryRow(ctx, query, prID).Scan(
@@ -57,7 +62,6 @@ func (r *Repository) GetPRByID(ctx context.Context, prID string) (*models.PullRe
 		&pr.Status,
 		&pr.CreatedAt,
 		&mergedAt)
-
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrPRNotFound
@@ -71,6 +75,7 @@ func (r *Repository) GetPRByID(ctx context.Context, prID string) (*models.PullRe
 	if err != nil {
 		return nil, err
 	}
+
 	pr.AssignedReviewers = reviewers
 
 	return &pr, nil
@@ -80,6 +85,7 @@ func (r *Repository) AssignReviewer(ctx context.Context, prID, userID string) er
 	query := `INSERT INTO pr_reviewers (pr_id, user_id, assigned_at) VALUES ($1, $2, $3)`
 
 	conn := r.getConn(ctx)
+
 	_, err := conn.Exec(ctx, query, prID, userID, time.Now())
 	if err != nil {
 		return fmt.Errorf("failed to assign reviewer: %w", err)
@@ -91,6 +97,7 @@ func (r *Repository) GetPRReviewers(ctx context.Context, prID string) ([]string,
 	query := `SELECT user_id FROM pr_reviewers WHERE pr_id = $1 ORDER BY assigned_at`
 
 	conn := r.getConn(ctx)
+
 	rows, err := conn.Query(ctx, query, prID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get PR reviewers: %w", err)
@@ -98,11 +105,13 @@ func (r *Repository) GetPRReviewers(ctx context.Context, prID string) ([]string,
 	defer rows.Close()
 
 	var reviewers []string
+
 	for rows.Next() {
 		var userID string
 		if err := rows.Scan(&userID); err != nil {
 			return nil, fmt.Errorf("failed to scan reviewer: %w", err)
 		}
+
 		reviewers = append(reviewers, userID)
 	}
 
@@ -116,6 +125,7 @@ func (r *Repository) GetPRReviewers(ctx context.Context, prID string) ([]string,
 func (r *Repository) MarkPRAsMerged(ctx context.Context, prID string, status models.PRStatus, now time.Time) error {
 	query := `UPDATE pull_requests SET status = $1, merged_at = $2 WHERE id = $3`
 	conn := r.getConn(ctx)
+
 	result, err := conn.Exec(ctx, query, status, now, prID)
 	if err != nil {
 		return fmt.Errorf("failed to mark PR as merged: %w", err)
@@ -127,10 +137,12 @@ func (r *Repository) MarkPRAsMerged(ctx context.Context, prID string, status mod
 
 	return nil
 }
+
 func (r *Repository) RemoveReviewer(ctx context.Context, prID, userID string) error {
 	query := `DELETE FROM pr_reviewers WHERE pr_id = $1 AND user_id = $2`
 
 	conn := r.getConn(ctx)
+
 	result, err := conn.Exec(ctx, query, prID, userID)
 	if err != nil {
 		return fmt.Errorf("failed to remove reviewer: %w", err)

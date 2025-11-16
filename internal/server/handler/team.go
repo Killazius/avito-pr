@@ -50,7 +50,8 @@ func (h *TeamHandler) CreateTeam(c *gin.Context) {
 			Error: models.ErrorBody{
 				Code:    models.ErrorBadRequest,
 				Message: "Invalid request payload",
-			}})
+			},
+		})
 		return
 	}
 
@@ -101,7 +102,8 @@ func (h *TeamHandler) GetTeam(c *gin.Context) {
 			Error: models.ErrorBody{
 				Code:    models.ErrorBadRequest,
 				Message: "Invalid request payload",
-			}})
+			},
+		})
 		return
 	}
 

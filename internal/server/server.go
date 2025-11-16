@@ -39,14 +39,13 @@ func New(
 		cfg:    cfg,
 		log:    log,
 	}
-
 }
 
 func registerRoutes(log *zap.Logger, handlers ...Handler) *gin.Engine {
-
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(RequestLogger(log))
+
 	for _, handler := range handlers {
 		handler.RegisterRoutes(r)
 	}

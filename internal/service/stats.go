@@ -55,7 +55,6 @@ func (s *StatsService) GetStats(ctx context.Context) (*models.Stats, error) {
 
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}

@@ -21,6 +21,7 @@ func main() {
 	if _, err := os.Stat(cfg.Postgres.MigrationsPath); os.IsNotExist(err) {
 		log.Fatal("migrations directory does not exist", zap.String("path", cfg.Postgres.MigrationsPath))
 	}
+
 	if *command == "" {
 		if len(flag.Args()) > 0 {
 			*command = flag.Args()[0]
@@ -34,14 +35,18 @@ func main() {
 		log.Fatal("error creating postgres pool", zap.Error(err))
 	}
 	defer pool.Close()
+
 	sqlDB := stdlib.OpenDBFromPool(pool)
+
 	defer func() {
 		if errClose := sqlDB.Close(); errClose != nil {
 			log.Error("failed to close sqlDB", zap.Error(errClose))
 		}
 	}()
+
 	if err = goose.Run(*command, sqlDB, cfg.Postgres.MigrationsPath); err != nil {
 		log.Error("failed to run goose command", zap.Error(err), zap.String("command", *command))
+
 		return
 	}
 

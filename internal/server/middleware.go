@@ -38,6 +38,7 @@ func RequestLogger(logger *zap.Logger) gin.HandlerFunc {
 		if requestID == "" {
 			requestID = xid.New().String()
 		}
+
 		c.Writer.Header().Set(requestIDHeader, requestID)
 
 		requestLogger := logger.With(
