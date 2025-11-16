@@ -31,13 +31,13 @@ func New(log *zap.Logger, cfg *config.Config) *App {
 		log.Fatal("failed to create repository", zap.Error(err))
 	}
 	teamService := teamservice.NewService(repo, repo, trManager)
-	teamHandler := team.NewHandler(teamService)
+	teamHandler := team.NewHandler(teamService, log)
 
 	userService := userservice.NewService(repo, trManager)
-	userHandler := user.NewHandler(userService)
+	userHandler := user.NewHandler(userService, log)
 
 	prService := prservice.NewService(repo, repo, repo, trManager)
-	prHandler := pr.NewHandler(prService)
+	prHandler := pr.NewHandler(prService, log)
 
 	statsService := statservice.NewService(repo, trManager)
 	statsHandler := stats.NewHandler(statsService)

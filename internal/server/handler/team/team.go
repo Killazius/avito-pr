@@ -8,6 +8,7 @@ import (
 	"github.com/Killazius/avito-pr/internal/models"
 	teamservice "github.com/Killazius/avito-pr/internal/service/team"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type Service interface {
@@ -16,11 +17,15 @@ type Service interface {
 }
 
 type Handler struct {
-	s Service
+	s   Service
+	log *zap.Logger
 }
 
-func NewHandler(s Service) *Handler {
-	return &Handler{s: s}
+func NewHandler(s Service, log *zap.Logger) *Handler {
+	return &Handler{
+		s:   s,
+		log: log,
+	}
 }
 
 type CreateTeamRequest struct {
@@ -40,6 +45,9 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 	var req CreateTeamRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
+		h.log.Warn("invalid request payload for Create Team",
+			zap.Error(err),
+			zap.String("method", "CreateTeam"))
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error: models.ErrorBody{
 				Code:    models.ErrorBadRequest,
@@ -47,9 +55,17 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 			}})
 		return
 	}
+
+	h.log.Info("creating team",
+		zap.String("team_name", req.TeamName),
+		zap.Int("members_count", len(req.Members)))
+
 	team, err := h.s.CreateTeamWithMembers(c.Request.Context(), req.TeamName, req.Members)
 	if err != nil {
 		if errors.Is(err, teamservice.ErrTeamExists) {
+			h.log.Warn("team already exists",
+				zap.String("team_name", req.TeamName),
+				zap.Error(err))
 			c.JSON(http.StatusBadRequest, models.ErrorResponse{
 				Error: models.ErrorBody{
 					Code:    models.ErrorTeamExists,
@@ -57,6 +73,9 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 				}})
 			return
 		}
+		h.log.Error("internal server error while creating team",
+			zap.String("team_name", req.TeamName),
+			zap.Error(err))
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 			Error: models.ErrorBody{
 				Code:    models.ErrorInternal,
@@ -64,6 +83,9 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 			}})
 		return
 	}
+
+	h.log.Info("team created successfully",
+		zap.String("team_name", req.TeamName))
 	c.JSON(http.StatusCreated, gin.H{
 		"team": team,
 	})
@@ -76,6 +98,9 @@ type GetTeamRequest struct {
 func (h *Handler) GetTeam(c *gin.Context) {
 	var req GetTeamRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
+		h.log.Warn("invalid request payload for Get Team",
+			zap.Error(err),
+			zap.String("method", "GetTeam"))
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
 			Error: models.ErrorBody{
 				Code:    models.ErrorBadRequest,
@@ -83,9 +108,16 @@ func (h *Handler) GetTeam(c *gin.Context) {
 			}})
 		return
 	}
+
+	h.log.Info("getting team",
+		zap.String("team_name", req.TeamName))
+
 	team, err := h.s.GetTeam(c.Request.Context(), req.TeamName)
 	if err != nil {
 		if errors.Is(err, teamservice.ErrTeamNotFound) {
+			h.log.Warn("team not found",
+				zap.String("team_name", req.TeamName),
+				zap.Error(err))
 			c.JSON(http.StatusNotFound, models.ErrorResponse{
 				Error: models.ErrorBody{
 					Code:    models.ErrorNotFound,
@@ -93,6 +125,9 @@ func (h *Handler) GetTeam(c *gin.Context) {
 				}})
 			return
 		}
+		h.log.Error("internal server error while getting team",
+			zap.String("team_name", req.TeamName),
+			zap.Error(err))
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 			Error: models.ErrorBody{
 				Code:    models.ErrorInternal,
@@ -100,5 +135,8 @@ func (h *Handler) GetTeam(c *gin.Context) {
 			}})
 		return
 	}
+
+	h.log.Info("team retrieved successfully",
+		zap.String("team_name", req.TeamName))
 	c.JSON(http.StatusOK, team)
 }
