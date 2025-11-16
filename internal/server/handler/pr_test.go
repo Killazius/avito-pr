@@ -52,7 +52,9 @@ func TestPRHandler_Create(t *testing.T) {
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Contains(t, response, "pr")
-				pr := response["pr"].(map[string]interface{})
+
+				pr, ok := response["pr"].(map[string]interface{})
+				assert.True(t, ok, "pr should be a map")
 				assert.Equal(t, "pr-1001", pr["pull_request_id"])
 				assert.Equal(t, "Add search", pr["pull_request_name"])
 				assert.Equal(t, "u1", pr["author_id"])
@@ -187,7 +189,8 @@ func TestPRHandler_Create(t *testing.T) {
 			})
 			handler.RegisterRoutes(router)
 
-			body, _ := json.Marshal(tt.requestBody)
+			body, err := json.Marshal(tt.requestBody)
+			assert.NoError(t, err)
 			req := httptest.NewRequest(http.MethodPost, "/pullRequest/create", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
@@ -235,7 +238,8 @@ func TestPRHandler_Merge(t *testing.T) {
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Contains(t, response, "pr")
-				pr := response["pr"].(map[string]interface{})
+				pr, ok := response["pr"].(map[string]interface{})
+				assert.True(t, ok, "pr should be a map")
 				assert.Equal(t, "pr-1001", pr["pull_request_id"])
 				assert.Equal(t, models.PRStatusMerged, pr["status"])
 			},
@@ -306,7 +310,8 @@ func TestPRHandler_Merge(t *testing.T) {
 			})
 			handler.RegisterRoutes(router)
 
-			body, _ := json.Marshal(tt.requestBody)
+			body, err := json.Marshal(tt.requestBody)
+			assert.NoError(t, err)
 			req := httptest.NewRequest(http.MethodPost, "/pullRequest/merge", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
@@ -357,7 +362,8 @@ func TestPRHandler_Reassign(t *testing.T) {
 				assert.Contains(t, response, "pr")
 				assert.Contains(t, response, "replaced_by")
 				assert.Equal(t, "u3", response["replaced_by"])
-				pr := response["pr"].(map[string]interface{})
+				pr, ok := response["pr"].(map[string]interface{})
+				assert.True(t, ok, "pr should be a map")
 				assert.Equal(t, "pr-1001", pr["pull_request_id"])
 			},
 		},
@@ -516,7 +522,8 @@ func TestPRHandler_Reassign(t *testing.T) {
 			})
 			handler.RegisterRoutes(router)
 
-			body, _ := json.Marshal(tt.requestBody)
+			body, err := json.Marshal(tt.requestBody)
+			assert.NoError(t, err)
 			req := httptest.NewRequest(http.MethodPost, "/pullRequest/reassign", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()

@@ -47,7 +47,8 @@ func TestUserHandler_SetUserStatus(t *testing.T) {
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Contains(t, response, "user")
-				user := response["user"].(map[string]interface{})
+				user, ok := response["user"].(map[string]interface{})
+				assert.True(t, ok)
 				assert.Equal(t, "u1", user["user_id"])
 				assert.Equal(t, "Alice", user["username"])
 				assert.Equal(t, "backend", user["team_name"])
@@ -74,7 +75,8 @@ func TestUserHandler_SetUserStatus(t *testing.T) {
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Contains(t, response, "user")
-				user := response["user"].(map[string]interface{})
+				user, ok := response["user"].(map[string]interface{})
+				assert.True(t, ok)
 				assert.Equal(t, "u2", user["user_id"])
 				assert.Equal(t, false, user["is_active"])
 			},
@@ -161,10 +163,12 @@ func TestUserHandler_SetUserStatus(t *testing.T) {
 			handler.RegisterRoutes(router)
 
 			var body []byte
+			var err error
 			if str, ok := tt.requestBody.(string); ok {
 				body = []byte(str)
 			} else {
-				body, _ = json.Marshal(tt.requestBody)
+				body, err = json.Marshal(tt.requestBody)
+				assert.NoError(t, err)
 			}
 
 			req := httptest.NewRequest(http.MethodPost, "/users/setIsActive", bytes.NewBuffer(body))
@@ -217,16 +221,19 @@ func TestUserHandler_GetReview(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, "u2", response["user_id"])
 				assert.Contains(t, response, "pull_requests")
-				prs := response["pull_requests"].([]interface{})
+				prs, ok := response["pull_requests"].([]interface{})
+				assert.True(t, ok)
 				assert.Len(t, prs, 2)
 
-				pr1 := prs[0].(map[string]interface{})
+				pr1, ok := prs[0].(map[string]interface{})
+				assert.True(t, ok)
 				assert.Equal(t, "pr-1001", pr1["pull_request_id"])
 				assert.Equal(t, "Add search", pr1["pull_request_name"])
 				assert.Equal(t, "u1", pr1["author_id"])
 				assert.Equal(t, models.PRStatusOpen, pr1["status"])
 
-				pr2 := prs[1].(map[string]interface{})
+				pr2, ok := prs[1].(map[string]interface{})
+				assert.True(t, ok)
 				assert.Equal(t, "pr-1002", pr2["pull_request_id"])
 				assert.Equal(t, "Fix bug", pr2["pull_request_name"])
 				assert.Equal(t, "u3", pr2["author_id"])
@@ -246,7 +253,8 @@ func TestUserHandler_GetReview(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, "u3", response["user_id"])
 				assert.Contains(t, response, "pull_requests")
-				prs := response["pull_requests"].([]interface{})
+				prs, ok := response["pull_requests"].([]interface{})
+				assert.True(t, ok)
 				assert.Len(t, prs, 0)
 			},
 		},
@@ -267,7 +275,7 @@ func TestUserHandler_GetReview(t *testing.T) {
 			name:        "user not found",
 			queryParams: "user_id=u999",
 			mockSetup: func(m *mocks.MockUserService) {
-				m.On("GetUserReviews", mock.Anything, "u999").Return(([]*models.PullRequestShort)(nil), service.ErrUserNotFound)
+				m.On("GetUserReviews", mock.Anything, "u999").Return(nil, service.ErrUserNotFound)
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
@@ -282,7 +290,7 @@ func TestUserHandler_GetReview(t *testing.T) {
 			name:        "internal server error",
 			queryParams: "user_id=u1",
 			mockSetup: func(m *mocks.MockUserService) {
-				m.On("GetUserReviews", mock.Anything, "u1").Return(([]*models.PullRequestShort)(nil), errors.New("database error"))
+				m.On("GetUserReviews", mock.Anything, "u1").Return(nil, errors.New("database error"))
 			},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, rec *httptest.ResponseRecorder) {
@@ -315,7 +323,7 @@ func TestUserHandler_GetReview(t *testing.T) {
 				url += "?" + tt.queryParams
 			}
 
-			req := httptest.NewRequest(http.MethodGet, url, nil)
+			req := httptest.NewRequest(http.MethodGet, url, http.NoBody)
 			w := httptest.NewRecorder()
 
 			router.ServeHTTP(w, req)

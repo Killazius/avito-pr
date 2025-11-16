@@ -54,10 +54,12 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 				err := json.Unmarshal(rec.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Contains(t, response, "team")
-				team := response["team"].(map[string]interface{})
+				team, ok := response["team"].(map[string]interface{})
+				assert.True(t, ok, "team should be a map")
 				assert.Equal(t, "backend", team["team_name"])
 				assert.NotNil(t, team["members"])
-				members := team["members"].([]interface{})
+				members, ok := team["members"].([]interface{})
+				assert.True(t, ok)
 				assert.Len(t, members, 2)
 			},
 		},
@@ -168,10 +170,12 @@ func TestTeamHandler_CreateTeam(t *testing.T) {
 			handler.RegisterRoutes(router)
 
 			var body []byte
+			var err error
 			if str, ok := tt.requestBody.(string); ok {
 				body = []byte(str)
 			} else {
-				body, _ = json.Marshal(tt.requestBody)
+				body, err = json.Marshal(tt.requestBody)
+				assert.NoError(t, err)
 			}
 
 			req := httptest.NewRequest(http.MethodPost, "/team/add", bytes.NewBuffer(body))
@@ -290,7 +294,7 @@ func TestTeamHandler_GetTeam(t *testing.T) {
 				url += "?" + tt.queryParams
 			}
 
-			req := httptest.NewRequest(http.MethodGet, url, nil)
+			req := httptest.NewRequest(http.MethodGet, url, http.NoBody)
 			w := httptest.NewRecorder()
 
 			router.ServeHTTP(w, req)

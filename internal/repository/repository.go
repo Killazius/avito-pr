@@ -26,7 +26,6 @@ func New(cfg config.PostgresConfig) (*postgres.Repository, *manager.Manager, err
 
 func CreatePool(cfg config.PostgresConfig) (*pgxpool.Pool, error) {
 	poolConfig, err := pgxpool.ParseConfig("")
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse connection string: %w", err)
 	}

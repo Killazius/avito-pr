@@ -9,7 +9,9 @@ import (
 func (r *Repository) GetTeamsCount(ctx context.Context) (int, error) {
 	conn := r.getConn(ctx)
 	query := `SELECT COUNT(*) FROM teams`
+
 	var count int
+
 	err := conn.QueryRow(ctx, query).Scan(&count)
 	if err != nil {
 		return 0, err

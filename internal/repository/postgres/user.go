@@ -86,7 +86,6 @@ func (r *Repository) GetActiveTeamMembers(ctx context.Context, teamID, authorID 
 
 	conn := r.getConn(ctx)
 	rows, err := conn.Query(ctx, query, args...)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get active team members: %w", err)
 	}

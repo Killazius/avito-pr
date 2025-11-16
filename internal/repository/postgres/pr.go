@@ -20,15 +20,13 @@ func (r *Repository) CreatePR(ctx context.Context, pr *models.PullRequest) error
 		pr.PullRequestID,
 		pr.PullRequestName,
 		pr.AuthorID,
-		pr.Status,
-	)
-
+		pr.Status)
 	if err != nil {
 		return fmt.Errorf("failed to create PR: %w", err)
 	}
 	return nil
-
 }
+
 func (r *Repository) PRExists(ctx context.Context, prID string) (bool, error) {
 	query := `SELECT EXISTS(SELECT 1 FROM pull_requests WHERE id = $1)`
 
@@ -58,8 +56,7 @@ func (r *Repository) GetPRByID(ctx context.Context, prID string) (*models.PullRe
 		&pr.AuthorID,
 		&pr.Status,
 		&pr.CreatedAt,
-		&mergedAt,
-	)
+		&mergedAt)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

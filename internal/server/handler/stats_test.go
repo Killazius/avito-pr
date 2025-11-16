@@ -80,7 +80,7 @@ func TestStatsHandler_GetStats(t *testing.T) {
 			})
 			handler.RegisterRoutes(router)
 
-			req := httptest.NewRequest(http.MethodGet, "/stats", nil)
+			req := httptest.NewRequest(http.MethodGet, "/stats", http.NoBody)
 			w := httptest.NewRecorder()
 
 			router.ServeHTTP(w, req)
