@@ -7,7 +7,7 @@ import (
 
 	"github.com/Killazius/avito-pr/internal/models"
 	"github.com/Killazius/avito-pr/internal/server"
-	prservice "github.com/Killazius/avito-pr/internal/service"
+	"github.com/Killazius/avito-pr/internal/service"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -67,7 +67,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 	pr, err := h.s.CreatePR(c.Request.Context(), req.PullRequestID, req.PullRequestName, req.AuthorID)
 	if err != nil {
 		switch {
-		case errors.Is(err, prservice.ErrPRExists):
+		case errors.Is(err, service.ErrPRExists):
 			log.Warn("PR already exists",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.Error(err))
@@ -76,7 +76,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 					Code:    models.ErrorPRExists,
 					Message: "PR already exists",
 				}})
-		case errors.Is(err, prservice.ErrUserNotFound):
+		case errors.Is(err, service.ErrUserNotFound):
 			log.Warn("author not found",
 				zap.String("author_id", req.AuthorID),
 				zap.Error(err))
@@ -85,7 +85,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 					Code:    models.ErrorNotFound,
 					Message: "Author not found",
 				}})
-		case errors.Is(err, prservice.ErrTeamNotFound):
+		case errors.Is(err, service.ErrTeamNotFound):
 			log.Warn("team not found",
 				zap.String("author_id", req.AuthorID),
 				zap.Error(err))
@@ -94,7 +94,7 @@ func (h *PRHandler) Create(c *gin.Context) {
 					Code:    models.ErrorNotFound,
 					Message: "Team not found",
 				}})
-		case errors.Is(err, prservice.ErrUserInactive):
+		case errors.Is(err, service.ErrUserInactive):
 			log.Warn("author is not active",
 				zap.String("author_id", req.AuthorID),
 				zap.Error(err))
@@ -145,7 +145,7 @@ func (h *PRHandler) Merge(c *gin.Context) {
 
 	pr, err := h.s.MergePR(c.Request.Context(), req.PullRequestID)
 	if err != nil {
-		if errors.Is(err, prservice.ErrPRNotFound) {
+		if errors.Is(err, service.ErrPRNotFound) {
 			log.Warn("PR not found",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.Error(err))
@@ -199,7 +199,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 	pr, newReviewerID, err := h.s.ReassignReviewer(c.Request.Context(), req.PullRequestID, req.OldReviewerID)
 	if err != nil {
 		switch {
-		case errors.Is(err, prservice.ErrPRNotFound):
+		case errors.Is(err, service.ErrPRNotFound):
 			log.Warn("PR not found",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.Error(err))
@@ -209,7 +209,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 					Message: "PR not found",
 				},
 			})
-		case errors.Is(err, prservice.ErrUserNotFound):
+		case errors.Is(err, service.ErrUserNotFound):
 			log.Warn("user not found",
 				zap.String("old_reviewer_id", req.OldReviewerID),
 				zap.Error(err))
@@ -219,7 +219,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 					Message: "User not found",
 				},
 			})
-		case errors.Is(err, prservice.ErrPRMerged):
+		case errors.Is(err, service.ErrPRMerged):
 			log.Warn("cannot reassign on merged PR",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.Error(err))
@@ -229,7 +229,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 					Message: "cannot reassign on merged PR",
 				},
 			})
-		case errors.Is(err, prservice.ErrNotAssigned):
+		case errors.Is(err, service.ErrNotAssigned):
 			log.Warn("reviewer is not assigned to this PR",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.String("old_reviewer_id", req.OldReviewerID),
@@ -240,7 +240,7 @@ func (h *PRHandler) Reassign(c *gin.Context) {
 					Message: "reviewer is not assigned to this PR",
 				},
 			})
-		case errors.Is(err, prservice.ErrNoCandidate):
+		case errors.Is(err, service.ErrNoCandidate):
 			log.Warn("no active replacement candidate in team",
 				zap.String("pull_request_id", req.PullRequestID),
 				zap.Error(err))

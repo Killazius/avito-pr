@@ -7,7 +7,7 @@ import (
 
 	"github.com/Killazius/avito-pr/internal/models"
 	"github.com/Killazius/avito-pr/internal/server"
-	teamservice "github.com/Killazius/avito-pr/internal/service"
+	"github.com/Killazius/avito-pr/internal/service"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -62,7 +62,7 @@ func (h *TeamHandler) CreateTeam(c *gin.Context) {
 
 	team, err := h.s.CreateTeamWithMembers(c.Request.Context(), req.TeamName, req.Members)
 	if err != nil {
-		if errors.Is(err, teamservice.ErrTeamExists) {
+		if errors.Is(err, service.ErrTeamExists) {
 			log.Warn("team already exists",
 				zap.String("team_name", req.TeamName),
 				zap.Error(err))
@@ -113,7 +113,7 @@ func (h *TeamHandler) GetTeam(c *gin.Context) {
 
 	team, err := h.s.GetTeam(c.Request.Context(), req.TeamName)
 	if err != nil {
-		if errors.Is(err, teamservice.ErrTeamNotFound) {
+		if errors.Is(err, service.ErrTeamNotFound) {
 			log.Warn("team not found",
 				zap.String("team_name", req.TeamName),
 				zap.Error(err))

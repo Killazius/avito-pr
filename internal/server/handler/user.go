@@ -7,7 +7,7 @@ import (
 
 	"github.com/Killazius/avito-pr/internal/models"
 	"github.com/Killazius/avito-pr/internal/server"
-	userservice "github.com/Killazius/avito-pr/internal/service"
+	"github.com/Killazius/avito-pr/internal/service"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -61,7 +61,7 @@ func (h *UserHandler) SetUserStatus(c *gin.Context) {
 
 	user, err := h.s.UpdateUserStatus(c.Request.Context(), req.UserID, req.IsActive)
 	if err != nil {
-		if errors.Is(err, userservice.ErrUserNotFound) {
+		if errors.Is(err, service.ErrUserNotFound) {
 			log.Warn("user not found",
 				zap.String("user_id", req.UserID),
 				zap.Error(err))
@@ -113,7 +113,7 @@ func (h *UserHandler) GetReview(c *gin.Context) {
 
 	reviews, err := h.s.GetUserReviews(c.Request.Context(), req.UserID)
 	if err != nil {
-		if errors.Is(err, userservice.ErrUserNotFound) {
+		if errors.Is(err, service.ErrUserNotFound) {
 			log.Warn("user not found",
 				zap.String("user_id", req.UserID),
 				zap.Error(err))
