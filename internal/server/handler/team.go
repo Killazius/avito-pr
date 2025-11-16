@@ -1,4 +1,4 @@
-package team
+package handler
 
 import (
 	"context"
@@ -6,23 +6,23 @@ import (
 	"net/http"
 
 	"github.com/Killazius/avito-pr/internal/models"
-	teamservice "github.com/Killazius/avito-pr/internal/service/team"
+	teamservice "github.com/Killazius/avito-pr/internal/service"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
-type Service interface {
+type TeamService interface {
 	CreateTeamWithMembers(ctx context.Context, teamName string, members []models.TeamMember) (*models.Team, error)
 	GetTeam(ctx context.Context, teamName string) (*models.Team, error)
 }
 
-type Handler struct {
-	s   Service
+type TeamHandler struct {
+	s   TeamService
 	log *zap.Logger
 }
 
-func NewHandler(s Service, log *zap.Logger) *Handler {
-	return &Handler{
+func NewTeamHandler(s TeamService, log *zap.Logger) *TeamHandler {
+	return &TeamHandler{
 		s:   s,
 		log: log,
 	}
@@ -33,7 +33,7 @@ type CreateTeamRequest struct {
 	Members  []models.TeamMember `json:"members" binding:"required"`
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *TeamHandler) RegisterRoutes(r gin.IRouter) {
 	teamGroup := r.Group("/team")
 	{
 		teamGroup.POST("/add", h.CreateTeam)
@@ -41,7 +41,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	}
 }
 
-func (h *Handler) CreateTeam(c *gin.Context) {
+func (h *TeamHandler) CreateTeam(c *gin.Context) {
 	var req CreateTeamRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -95,7 +95,7 @@ type GetTeamRequest struct {
 	TeamName string `form:"team_name" binding:"required"`
 }
 
-func (h *Handler) GetTeam(c *gin.Context) {
+func (h *TeamHandler) GetTeam(c *gin.Context) {
 	var req GetTeamRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		h.log.Warn("invalid request payload for Get Team",

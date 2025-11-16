@@ -1,4 +1,4 @@
-package user
+package service
 
 import (
 	"context"
@@ -10,26 +10,19 @@ import (
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 )
 
-var ErrUserNotFound = fmt.Errorf("user not found")
-
-type UserRepository interface {
-	UpdateIsActiveStatus(ctx context.Context, userID string, isActive bool) error
-	GetUserByID(ctx context.Context, userID string) (*models.User, error)
-	GetUserReviews(ctx context.Context, userID string) ([]*models.PullRequestShort, error)
-}
-type Service struct {
+type UserService struct {
 	userRepo  UserRepository
 	trManager *manager.Manager
 }
 
-func NewService(userRepo UserRepository, trManager *manager.Manager) *Service {
-	return &Service{
+func NewUserService(userRepo UserRepository, trManager *manager.Manager) *UserService {
+	return &UserService{
 		userRepo:  userRepo,
 		trManager: trManager,
 	}
 }
 
-func (s *Service) UpdateUserStatus(ctx context.Context, userID string, isActive bool) (*models.User, error) {
+func (s *UserService) UpdateUserStatus(ctx context.Context, userID string, isActive bool) (*models.User, error) {
 	if userID == "" {
 		return nil, fmt.Errorf("user ID cannot be empty")
 	}
@@ -54,7 +47,7 @@ func (s *Service) UpdateUserStatus(ctx context.Context, userID string, isActive 
 	return user, nil
 
 }
-func (s *Service) GetUserReviews(ctx context.Context, userID string) ([]*models.PullRequestShort, error) {
+func (s *UserService) GetUserReviews(ctx context.Context, userID string) ([]*models.PullRequestShort, error) {
 	if userID == "" {
 		return nil, fmt.Errorf("userID cannot be empty")
 	}

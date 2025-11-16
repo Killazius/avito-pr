@@ -1,4 +1,4 @@
-package pr
+package handler
 
 import (
 	"context"
@@ -6,30 +6,30 @@ import (
 	"net/http"
 
 	"github.com/Killazius/avito-pr/internal/models"
-	prservice "github.com/Killazius/avito-pr/internal/service/pr"
+	prservice "github.com/Killazius/avito-pr/internal/service"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
-type Service interface {
+type PRService interface {
 	CreatePR(ctx context.Context, prID string, prName string, authorID string) (*models.PullRequest, error)
 	MergePR(ctx context.Context, prID string) (*models.PullRequest, error)
 	ReassignReviewer(ctx context.Context, pullRequestID, oldUserID string) (*models.PullRequest, string, error)
 }
 
-type Handler struct {
-	s   Service
+type PRHandler struct {
+	s   PRService
 	log *zap.Logger
 }
 
-func NewHandler(s Service, log *zap.Logger) *Handler {
-	return &Handler{
+func NewPRHandler(s PRService, log *zap.Logger) *PRHandler {
+	return &PRHandler{
 		s:   s,
 		log: log,
 	}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *PRHandler) RegisterRoutes(r gin.IRouter) {
 	prGroup := r.Group("/pullRequest")
 	{
 		prGroup.POST("/create", h.Create)
@@ -44,7 +44,7 @@ type CreatePRRequest struct {
 	AuthorID        string `json:"author_id" binding:"required"`
 }
 
-func (h *Handler) Create(c *gin.Context) {
+func (h *PRHandler) Create(c *gin.Context) {
 	var req CreatePRRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -126,7 +126,7 @@ type MergePRRequest struct {
 	PullRequestID string `json:"pull_request_id" binding:"required"`
 }
 
-func (h *Handler) Merge(c *gin.Context) {
+func (h *PRHandler) Merge(c *gin.Context) {
 	var req MergePRRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -179,7 +179,7 @@ type ReassignPRRequest struct {
 	OldReviewerID string `json:"old_reviewer_id" binding:"required"`
 }
 
-func (h *Handler) Reassign(c *gin.Context) {
+func (h *PRHandler) Reassign(c *gin.Context) {
 	var req ReassignPRRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {

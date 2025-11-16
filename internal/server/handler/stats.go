@@ -1,4 +1,4 @@
-package stats
+package handler
 
 import (
 	"context"
@@ -8,22 +8,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Service interface {
+type StatsService interface {
 	GetStats(ctx context.Context) (*models.Stats, error)
 }
-type Handler struct {
-	s Service
+type StatsHandler struct {
+	s StatsService
 }
 
-func NewHandler(s Service) *Handler {
-	return &Handler{s: s}
+func NewStatsHandler(s StatsService) *StatsHandler {
+	return &StatsHandler{s: s}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *StatsHandler) RegisterRoutes(r gin.IRouter) {
 	r.GET("/stats", h.GetStats)
 }
 
-func (h *Handler) GetStats(c *gin.Context) {
+func (h *StatsHandler) GetStats(c *gin.Context) {
 	stats, err := h.s.GetStats(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{

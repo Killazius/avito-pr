@@ -29,8 +29,6 @@ func (r *Repository) CreateOrUpdateUser(ctx context.Context, user models.TeamMem
 	return nil
 }
 
-var ErrUserNotFound = fmt.Errorf("user not found")
-
 func (r *Repository) UpdateIsActiveStatus(ctx context.Context, userID string, isActive bool) error {
 	query := `UPDATE users SET is_active = $1, updated_at = NOW() WHERE user_id = $2`
 

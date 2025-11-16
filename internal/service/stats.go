@@ -1,4 +1,4 @@
-package stats
+package service
 
 import (
 	"context"
@@ -7,25 +7,19 @@ import (
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 )
 
-type Repository interface {
-	GetTeamsCount(ctx context.Context) (int, error)
-	GetUsersStats(ctx context.Context) (*models.UsersStats, error)
-	GetPRStats(ctx context.Context) (*models.PRStats, error)
-	GetAssignmentsCount(ctx context.Context) (int, error)
-}
-type Service struct {
+type StatsService struct {
 	tr   *manager.Manager
-	repo Repository
+	repo StatsRepository
 }
 
-func NewService(repo Repository, tr *manager.Manager) *Service {
-	return &Service{
+func NewStatsService(repo StatsRepository, tr *manager.Manager) *StatsService {
+	return &StatsService{
 		tr:   tr,
 		repo: repo,
 	}
 }
 
-func (s *Service) GetStats(ctx context.Context) (*models.Stats, error) {
+func (s *StatsService) GetStats(ctx context.Context) (*models.Stats, error) {
 	var stats *models.Stats
 
 	err := s.tr.Do(ctx, func(ctx context.Context) error {

@@ -1,4 +1,4 @@
-package pr
+package service
 
 import (
 	"context"
@@ -12,32 +12,15 @@ import (
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 )
 
-type TeamRepository interface {
-	TeamExists(ctx context.Context, name string) (bool, error)
-}
-
-type UserRepository interface {
-	GetUserByID(ctx context.Context, userID string) (*models.User, error)
-	GetActiveTeamMembers(ctx context.Context, teamID, authorID string, excludeIDs ...string) ([]*models.User, error)
-}
-
-type PRRepository interface {
-	CreatePR(ctx context.Context, pr *models.PullRequest) error
-	PRExists(ctx context.Context, prID string) (bool, error)
-	GetPRByID(ctx context.Context, prID string) (*models.PullRequest, error)
-	AssignReviewer(ctx context.Context, prID, userID string) error
-	MarkPRAsMerged(ctx context.Context, prID string, status models.PRStatus, now time.Time) error
-	RemoveReviewer(ctx context.Context, prID, userID string) error
-}
-type Service struct {
+type PRService struct {
 	trManager *manager.Manager
 	teamRepo  TeamRepository
 	userRepo  UserRepository
 	prRepo    PRRepository
 }
 
-func NewService(TeamRepository TeamRepository, UserRepository UserRepository, PRRepository PRRepository, trManager *manager.Manager) *Service {
-	return &Service{
+func NewPRService(TeamRepository TeamRepository, UserRepository UserRepository, PRRepository PRRepository, trManager *manager.Manager) *PRService {
+	return &PRService{
 		trManager: trManager,
 		teamRepo:  TeamRepository,
 		userRepo:  UserRepository,
@@ -45,19 +28,7 @@ func NewService(TeamRepository TeamRepository, UserRepository UserRepository, PR
 	}
 }
 
-var (
-	ErrPRExists     = errors.New("PR already exists")
-	ErrUserNotFound = errors.New("user not found")
-	ErrTeamNotFound = errors.New("team not found")
-	ErrNoReviewers  = errors.New("no available reviewers in team")
-	ErrPRNotFound   = errors.New("PR not found")
-	ErrPRMerged     = errors.New("cannot reassign reviewer for merged PR")
-	ErrNotAssigned  = errors.New("reviewer is not assigned to this PR")
-	ErrNoCandidate  = errors.New("no active replacement candidate in team")
-	ErrUserInactive = errors.New("user is not active")
-)
-
-func (s *Service) CreatePR(ctx context.Context, prID string, prName string, authorID string) (*models.PullRequest, error) {
+func (s *PRService) CreatePR(ctx context.Context, prID string, prName string, authorID string) (*models.PullRequest, error) {
 	if prID == "" || prName == "" || authorID == "" {
 		return nil, fmt.Errorf("prID, prName and authorID are required")
 	}
@@ -116,7 +87,7 @@ func (s *Service) CreatePR(ctx context.Context, prID string, prName string, auth
 	return s.prRepo.GetPRByID(ctx, prID)
 }
 
-func (s *Service) autoAssignReviewers(ctx context.Context, author *models.User) ([]string, error) {
+func (s *PRService) autoAssignReviewers(ctx context.Context, author *models.User) ([]string, error) {
 	candidates, err := s.userRepo.GetActiveTeamMembers(ctx, author.TeamName, author.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get team members: %w", err)
@@ -140,7 +111,7 @@ func (s *Service) autoAssignReviewers(ctx context.Context, author *models.User) 
 	return reviewerIDs, nil
 }
 
-func (s *Service) MergePR(ctx context.Context, prID string) (*models.PullRequest, error) {
+func (s *PRService) MergePR(ctx context.Context, prID string) (*models.PullRequest, error) {
 	if prID == "" {
 		return nil, fmt.Errorf("prID is required")
 	}
@@ -171,7 +142,7 @@ func (s *Service) MergePR(ctx context.Context, prID string) (*models.PullRequest
 	return pr, nil
 }
 
-func (s *Service) ReassignReviewer(ctx context.Context, pullRequestID, oldUserID string) (*models.PullRequest, string, error) {
+func (s *PRService) ReassignReviewer(ctx context.Context, pullRequestID, oldUserID string) (*models.PullRequest, string, error) {
 	if pullRequestID == "" || oldUserID == "" {
 		return nil, "", fmt.Errorf("pullRequestID and oldUserID are required")
 	}

@@ -14,12 +14,12 @@ import (
 )
 
 type Handler interface {
-	RegisterRoutes(r *gin.Engine)
+	RegisterRoutes(r gin.IRouter)
 }
 type Server struct {
 	server *http.Server
 	cfg    config.HTTPConfig
-	router *gin.Engine
+	router gin.IRouter
 	log    *zap.Logger
 }
 

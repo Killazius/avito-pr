@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
 	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -11,6 +12,9 @@ type Repository struct {
 	db     *pgxpool.Pool
 	getter *trmpgx.CtxGetter
 }
+
+var ErrUserNotFound = errors.New("user not found")
+var ErrTeamNotFound = errors.New("team not found")
 
 func New(
 	db *pgxpool.Pool,

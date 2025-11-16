@@ -1,4 +1,4 @@
-package user
+package handler
 
 import (
 	"context"
@@ -6,29 +6,29 @@ import (
 	"net/http"
 
 	"github.com/Killazius/avito-pr/internal/models"
-	userservice "github.com/Killazius/avito-pr/internal/service/user"
+	userservice "github.com/Killazius/avito-pr/internal/service"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
-type Service interface {
+type UserService interface {
 	UpdateUserStatus(ctx context.Context, userID string, isActive bool) (*models.User, error)
 	GetUserReviews(ctx context.Context, userID string) ([]*models.PullRequestShort, error)
 }
 
-type Handler struct {
-	s   Service
+type UserHandler struct {
+	s   UserService
 	log *zap.Logger
 }
 
-func NewHandler(s Service, log *zap.Logger) *Handler {
-	return &Handler{
+func NewHandler(s UserService, log *zap.Logger) *UserHandler {
+	return &UserHandler{
 		s:   s,
 		log: log,
 	}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *UserHandler) RegisterRoutes(r gin.IRouter) {
 	usersGroup := r.Group("/users")
 	{
 		usersGroup.POST("/setIsActive", h.SetUserStatus)
@@ -41,7 +41,7 @@ type SetUserStatusRequest struct {
 	IsActive bool   `json:"is_active"`
 }
 
-func (h *Handler) SetUserStatus(c *gin.Context) {
+func (h *UserHandler) SetUserStatus(c *gin.Context) {
 	var req SetUserStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.log.Warn("invalid request payload for Set User Status",
@@ -93,7 +93,7 @@ type GetReviewsRequest struct {
 	UserID string `form:"user_id" binding:"required"`
 }
 
-func (h *Handler) GetReview(c *gin.Context) {
+func (h *UserHandler) GetReview(c *gin.Context) {
 	var req GetReviewsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		h.log.Warn("invalid request payload for Get Review",

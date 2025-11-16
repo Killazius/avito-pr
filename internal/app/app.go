@@ -4,14 +4,8 @@ import (
 	"github.com/Killazius/avito-pr/internal/config"
 	"github.com/Killazius/avito-pr/internal/repository"
 	"github.com/Killazius/avito-pr/internal/server"
-	"github.com/Killazius/avito-pr/internal/server/handler/pr"
-	"github.com/Killazius/avito-pr/internal/server/handler/stats"
-	"github.com/Killazius/avito-pr/internal/server/handler/team"
-	"github.com/Killazius/avito-pr/internal/server/handler/user"
-	prservice "github.com/Killazius/avito-pr/internal/service/pr"
-	statservice "github.com/Killazius/avito-pr/internal/service/stats"
-	teamservice "github.com/Killazius/avito-pr/internal/service/team"
-	userservice "github.com/Killazius/avito-pr/internal/service/user"
+	"github.com/Killazius/avito-pr/internal/server/handler"
+	"github.com/Killazius/avito-pr/internal/service"
 	"go.uber.org/zap"
 )
 
@@ -30,17 +24,17 @@ func New(log *zap.Logger, cfg *config.Config) *App {
 	if err != nil {
 		log.Fatal("failed to create repository", zap.Error(err))
 	}
-	teamService := teamservice.NewService(repo, repo, trManager)
-	teamHandler := team.NewHandler(teamService, log)
+	teamService := service.NewTeamService(repo, repo, trManager)
+	teamHandler := handler.NewTeamHandler(teamService, log)
 
-	userService := userservice.NewService(repo, trManager)
-	userHandler := user.NewHandler(userService, log)
+	userService := service.NewUserService(repo, trManager)
+	userHandler := handler.NewHandler(userService, log)
 
-	prService := prservice.NewService(repo, repo, repo, trManager)
-	prHandler := pr.NewHandler(prService, log)
+	prService := service.NewPRService(repo, repo, repo, trManager)
+	prHandler := handler.NewPRHandler(prService, log)
 
-	statsService := statservice.NewService(repo, trManager)
-	statsHandler := stats.NewHandler(statsService)
+	statsService := service.NewStatsService(repo, trManager)
+	statsHandler := handler.NewStatsHandler(statsService)
 
 	api := server.New(log, cfg.Server, teamHandler, userHandler, prHandler, statsHandler)
 

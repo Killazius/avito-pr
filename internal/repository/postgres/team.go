@@ -31,8 +31,6 @@ func (r *Repository) TeamExists(ctx context.Context, name string) (bool, error) 
 	return exists, nil
 }
 
-var ErrTeamNotFound = fmt.Errorf("team not found")
-
 func (r *Repository) GetTeamWithMembers(ctx context.Context, name string) (*models.Team, error) {
 	conn := r.db
 

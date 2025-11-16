@@ -1,4 +1,4 @@
-package team
+package service
 
 import (
 	"context"
@@ -10,34 +10,21 @@ import (
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 )
 
-type TeamRepository interface {
-	CreateTeam(ctx context.Context, teamName string) error
-	TeamExists(ctx context.Context, name string) (bool, error)
-	GetTeamWithMembers(ctx context.Context, name string) (*models.Team, error)
-}
-
-type UserRepository interface {
-	CreateOrUpdateUser(ctx context.Context, user models.TeamMember, teamID string) error
-	UpdateIsActiveStatus(ctx context.Context, userID string, isActive bool) error
-}
-type Service struct {
+type TeamService struct {
 	teamRepo  TeamRepository
 	userRepo  UserRepository
 	trManager *manager.Manager
 }
 
-func NewService(teamRepo TeamRepository, userRepo UserRepository, trManager *manager.Manager) *Service {
-	return &Service{
+func NewTeamService(teamRepo TeamRepository, userRepo UserRepository, trManager *manager.Manager) *TeamService {
+	return &TeamService{
 		teamRepo:  teamRepo,
 		userRepo:  userRepo,
 		trManager: trManager,
 	}
 }
 
-var ErrTeamExists = fmt.Errorf("team already exists")
-var ErrTeamNotFound = fmt.Errorf("team not found")
-
-func (s *Service) CreateTeamWithMembers(ctx context.Context, teamName string, members []models.TeamMember) (*models.Team, error) {
+func (s *TeamService) CreateTeamWithMembers(ctx context.Context, teamName string, members []models.TeamMember) (*models.Team, error) {
 	if teamName == "" {
 		return nil, fmt.Errorf("team name cannot be empty")
 	}
@@ -78,7 +65,7 @@ func (s *Service) CreateTeamWithMembers(ctx context.Context, teamName string, me
 	return s.teamRepo.GetTeamWithMembers(ctx, teamName)
 }
 
-func (s *Service) GetTeam(ctx context.Context, teamName string) (*models.Team, error) {
+func (s *TeamService) GetTeam(ctx context.Context, teamName string) (*models.Team, error) {
 	if teamName == "" {
 		return nil, fmt.Errorf("team name cannot be empty")
 	}
