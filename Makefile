@@ -1,5 +1,3 @@
-include .env
-
 
 TEST_FLAGS ?= -v -race -parallel 5 -shuffle=on
 COVER_FLAGS ?= -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
@@ -8,7 +6,7 @@ BINARY_NAME ?= bin/app
 .PHONY: docker-up docker-clean test lint deps build clean mock docker-build
 .DEFAULT_GOAL := help
 
-docker:
+docker-up:
 	docker compose up -d
 
 docker-build:
@@ -39,7 +37,7 @@ mock:
 	mockery
 help:
 	@echo "Available targets:"
-	@echo "  docker      - Start docker containers"
+	@echo "  docker-up    - Start docker containers"
 	@echo "  docker-clean - Clean docker containers and images"
 	@echo "  docker-build - Build docker images"
 	@echo "  test        - Run tests with race detection and coverage"
