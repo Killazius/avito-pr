@@ -5,13 +5,16 @@ TEST_FLAGS ?= -v -race -parallel 5 -shuffle=on
 COVER_FLAGS ?= -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
 BINARY_NAME ?= bin/app
 
-.PHONY: docker clean-docker test lint deps build clean mock
+.PHONY: docker-up docker-clean test lint deps build clean mock docker-build
 .DEFAULT_GOAL := help
 
-docker: clean-docker
-	docker compose up -d --build
+docker:
+	docker compose up -d
 
-clean-docker:
+docker-build:
+	docker compose build
+
+docker-clean:
 	docker compose down
 	docker image prune -f
 
@@ -27,7 +30,7 @@ deps:
 	go mod tidy
 
 build: deps
-	go build -o $(BINARY_NAME) ./cmd/
+	go build -o $(BINARY_NAME) ./cmd/app
 
 clean:
 	rm -rf bin/
@@ -36,8 +39,9 @@ mock:
 	mockery
 help:
 	@echo "Available targets:"
-	@echo "  docker      - Rebuild and restart docker containers"
-	@echo "  clean-docker - Clean docker containers and images"
+	@echo "  docker      - Start docker containers"
+	@echo "  docker-clean - Clean docker containers and images"
+	@echo "  docker-build - Build docker images"
 	@echo "  test        - Run tests with race detection and coverage"
 	@echo "  lint        - Run golangci-lint"
 	@echo "  deps        - Download dependencies"
