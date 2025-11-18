@@ -12,6 +12,3 @@ postgres:
   conn_max_lifetime: 1h
   conn_max_idle_time: 25m
   timeout: 5s
-  migrations_path: "./migrations"
-logger:
-  path: "config/logger.json"

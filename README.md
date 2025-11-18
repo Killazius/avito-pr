@@ -55,7 +55,41 @@ GIN_MODE=release // Режим работы Gin (debug/release/test)
 GOOSE_DRIVER=postgres // Драйвер для Goose миграций
 GOOSE_MIGRATION_DIR=./migrations // Путь к директории с миграциями
 ```
-
+## config/config.yaml
+```yaml
+server: # Настройки сервера
+  host: 0.0.0.0 # Хост
+  port: 8080 # Порт
+  timeout: # Таймауты
+    server: 30s # Общий таймаут
+    read: 15s # Таймаут чтения
+    write: 10s # Таймаут записи
+    idle: 5s # Таймаут простоя
+postgres: # Доп. Настройки PostgreSQL
+  max_open_conns: 25 # Максимальное количество открытых соединений
+  max_idle_conns: 5 # Максимальное количество неактивных соединений
+  conn_max_lifetime: 1h # Максимальное время жизни соединения
+  conn_max_idle_time: 25m # Максимальное время простоя соединения
+  timeout: 5s # Таймаут подключения
+```
+## config/logger.json
+```json
+{
+  "level": "debug",  // Уровень логирования (при GIN_MODE=release меняется на info)
+  "encoding": "json",
+  "outputPaths": ["stdout"],
+  "errorOutputPaths": ["stderr"],
+  "encoderConfig": {
+    "timeKey": "timestamp",
+    "timeEncoder": "rfc3339",
+    "messageKey": "message",
+    "levelKey": "level",
+    "levelEncoder": "lowercase",
+    "callerKey": "caller",
+    "callerEncoder": "short"
+  }
+}
+```
 ## Настройка окружения
 1. `cp .env.example .env`
 2. Заполните переменные окружения в файле .env при необходимости
